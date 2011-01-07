@@ -89,14 +89,14 @@ def create_uml_graph(mappers, show_operations=True, show_attributes=True, show_m
 
     return graph
 
-from sqlalchemy.databases.postgres import PGDialect
+from sqlalchemy.dialects.postgresql.base import PGDialect
 from sqlalchemy import Table, text
 
 def _render_table_html(table, metadata, show_indexes, show_datatypes):
     def format_col_type(col):
         try:
             return col.type.get_col_spec()
-        except NotImplementedError:
+        except (AttributeError, NotImplementedError):
             return str(col.type)
     def format_col_str(col):
          if show_datatypes:
