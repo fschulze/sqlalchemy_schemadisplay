@@ -1,3 +1,5 @@
+# updated SQLA schema display to work with pydot 1.0.2
+
 from sqlalchemy.orm.properties import PropertyLoader
 from sqlalchemy.orm import sync
 import pydot
@@ -29,22 +31,23 @@ def _mk_label(mapper, show_operations, show_attributes, show_datatypes, bordersi
 
 
 def create_uml_graph(mappers, show_operations=True, show_attributes=True, show_multiplicity_one=False, show_datatypes=True, linewidth=1.0, font="Bitstream-Vera Sans"):
-    graph = pydot.Dot(prog='neato',mode="major",overlap="0",sep=0.01,pack=True,dim=3)
+    graph = pydot.Dot(prog='neato',mode="major",overlap="0", sep="0.01",dim="3", pack="True", ratio=".75")
     relations = set()
     for mapper in mappers:
         graph.add_node(pydot.Node(mapper.class_.__name__,
             shape="plaintext", label=_mk_label(mapper, show_operations, show_attributes, show_datatypes, linewidth),
-            fontname=font, fontsize=8.0,
+            fontname=font, fontsize="8.0",
         ))
         if mapper.inherits:
             graph.add_edge(pydot.Edge(mapper.inherits.class_.__name__,mapper.class_.__name__,
-                arrowhead='none',arrowtail='empty', style="setlinewidth(%s)" % linewidth, arrowsize=linewidth))
+                arrowhead='none',arrowtail='empty', style="setlinewidth(%s)" % linewidth, arrowsize=str(linewidth)))
         for loader in mapper.iterate_properties:
-            if isinstance(loader, PropertyLoader) and loader.select_mapper in mappers:
+            if isinstance(loader, PropertyLoader) and loader.mapper in mappers:
                 if hasattr(loader, 'reverse_property'):
                     relations.add(frozenset([loader, loader.reverse_property]))
                 else:
                     relations.add(frozenset([loader]))
+
     for relation in relations:
         #if len(loaders) > 2:
         #    raise Exception("Warning: too many loaders for join %s" % join)
@@ -78,9 +81,9 @@ def create_uml_graph(mappers, show_operations=True, show_attributes=True, show_m
             args['headlabel'] = '+%s%s' % (prop.key, multiplicity_indicator(prop))
             args['arrowtail'] = 'none'
             args['arrowhead'] = 'vee'
-            
+        
         graph.add_edge(pydot.Edge(from_name,to_name,
-            fontname=font, fontsize=7.0, style="setlinewidth(%s)"%linewidth, arrowsize=linewidth,
+            fontname=font, fontsize="7.0", style="setlinewidth(%s)"%linewidth, arrowsize=str(linewidth),
             **args)
         )
 
@@ -103,7 +106,7 @@ def _render_table_html(table, metadata, show_indexes, show_datatypes):
     html = '<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0"><TR><TD ALIGN="CENTER">%s</TD></TR><TR><TD BORDER="1" CELLPADDING="0"></TD></TR>' % table.name 
 
     html += ''.join('<TR><TD ALIGN="LEFT" PORT="%s">%s</TD></TR>' % (col.name, format_col_str(col)) for col in table.columns)
-    if isinstance(metadata.bind.dialect, PGDialect):
+    if metadata.bind and isinstance(metadata.bind.dialect, PGDialect):
         # postgres engine doesn't reflect indexes
         indexes = dict((name,defin) for name,defin in metadata.bind.execute(text("SELECT indexname, indexdef FROM pg_indexes WHERE tablename = '%s'" % table.name)))
         if indexes and show_indexes:
@@ -118,7 +121,7 @@ def _render_table_html(table, metadata, show_indexes, show_datatypes):
 def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_datatypes=True, font="Bitstream-Vera Sans",
     concentrate=True, relation_options={}, rankdir='TB'):
     relation_kwargs = {
-        'fontsize':7.0
+        'fontsize':"7.0"
     }
     relation_kwargs.update(relation_options)
     
@@ -131,12 +134,12 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
     else:
         raise Exception("You need to specify at least tables or metadata")
     
-    graph = pydot.Dot(prog="dot",mode="ipsep",overlap="ipsep",sep=0.01,concentrate=concentrate, rankdir=rankdir)
+    graph = pydot.Dot(prog="dot",mode="ipsep",overlap="ipsep",sep="0.01",concentrate=str(concentrate), rankdir=rankdir)
     for table in tables:
         graph.add_node(pydot.Node(str(table.name),
             shape="plaintext",
             label=_render_table_html(table, metadata, show_indexes, show_datatypes),
-            fontname=font, fontsize=7.0
+            fontname=font, fontsize="7.0"
         ))
     
     for table in tables:
@@ -153,12 +156,15 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
                 #samehead=fk.column.name, sametail=fk.parent.name,
                 *edge, **relation_kwargs
             )
-            graph_edge.parent_graph = graph.parent_graph
-            if table.name not in graph.edge_src_list:
-                graph.edge_src_list.append(table.name)
-            if fk.column.table.name not in graph.edge_dst_list:
-                graph.edge_dst_list.append(fk.column.table.name)
-            graph.sorted_graph_elements.append(graph_edge)
+            graph.add_edge(graph_edge)
+
+# not sure what this part is for, doesn't work with pydot 1.0.2
+#            graph_edge.parent_graph = graph.parent_graph
+#            if table.name not in [e.get_source() for e in graph.get_edge_list()]:
+#                graph.edge_src_list.append(table.name)
+#            if fk.column.table.name not in graph.edge_dst_list:
+#                graph.edge_dst_list.append(fk.column.table.name)
+#            graph.sorted_graph_elements.append(graph_edge)
     return graph
 
 def show_uml_graph(*args, **kwargs):
