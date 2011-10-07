@@ -30,16 +30,20 @@ def _mk_label(mapper, show_operations, show_attributes, show_datatypes, bordersi
     return html
 
 
+def escape(name):
+    return '"%s"' % name
+
+
 def create_uml_graph(mappers, show_operations=True, show_attributes=True, show_multiplicity_one=False, show_datatypes=True, linewidth=1.0, font="Bitstream-Vera Sans"):
     graph = pydot.Dot(prog='neato',mode="major",overlap="0", sep="0.01",dim="3", pack="True", ratio=".75")
     relations = set()
     for mapper in mappers:
-        graph.add_node(pydot.Node(mapper.class_.__name__,
+        graph.add_node(pydot.Node(escape(mapper.class_.__name__),
             shape="plaintext", label=_mk_label(mapper, show_operations, show_attributes, show_datatypes, linewidth),
             fontname=font, fontsize="8.0",
         ))
         if mapper.inherits:
-            graph.add_edge(pydot.Edge(mapper.inherits.class_.__name__,mapper.class_.__name__,
+            graph.add_edge(pydot.Edge(escape(mapper.inherits.class_.__name__),escape(mapper.class_.__name__),
                 arrowhead='none',arrowtail='empty', style="setlinewidth(%s)" % linewidth, arrowsize=str(linewidth)))
         for loader in mapper.iterate_properties:
             if isinstance(loader, PropertyLoader) and loader.mapper in mappers:
@@ -63,8 +67,8 @@ def create_uml_graph(mappers, show_operations=True, show_attributes=True, show_m
         
         if len(relation) == 2:
             src, dest = relation
-            from_name = src.parent.class_.__name__
-            to_name = dest.parent.class_.__name__
+            from_name = escape(src.parent.class_.__name__)
+            to_name = escape(dest.parent.class_.__name__)
             
             def calc_label(src,dest):
                 return '+' + src.key + multiplicity_indicator(src)
@@ -76,8 +80,8 @@ def create_uml_graph(mappers, show_operations=True, show_attributes=True, show_m
             args['constraint'] = False
         else:
             prop, = relation
-            from_name = prop.parent.class_.__name__
-            to_name = prop.mapper.class_.__name__
+            from_name = escape(prop.parent.class_.__name__)
+            to_name = escape(prop.mapper.class_.__name__)
             args['headlabel'] = '+%s%s' % (prop.key, multiplicity_indicator(prop))
             args['arrowtail'] = 'none'
             args['arrowhead'] = 'vee'
