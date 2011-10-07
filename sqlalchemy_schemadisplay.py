@@ -7,7 +7,7 @@ import types
 
 __all__ = ['create_uml_graph', 'create_schema_graph', 'show_uml_graph', 'show_schema_graph']
 
-def _mk_label(mapper, show_operations, show_attributes, show_datatypes, bordersize):
+def _mk_label(mapper, show_operations, show_attributes, show_datatypes, show_inherited, bordersize):
     html = '<<TABLE CELLSPACING="0" CELLPADDING="1" BORDER="0" CELLBORDER="%d" BALIGN="LEFT"><TR><TD><FONT POINT-SIZE="10">%s</FONT></TD></TR>' % (bordersize, mapper.class_.__name__)
     def format_col(col):
         colstr = '+%s' % (col.name)
@@ -16,7 +16,11 @@ def _mk_label(mapper, show_operations, show_attributes, show_datatypes, bordersi
         return colstr
             
     if show_attributes:
-        html += '<TR><TD ALIGN="LEFT">%s</TD></TR>' % '<BR ALIGN="LEFT"/>'.join(format_col(col) for col in sorted(mapper.columns, key=lambda col:not col.primary_key))
+        if not show_inherited:
+            cols = [c for c in mapper.columns if c.table == mapper.tables[0]]
+        else:
+            cols = mapper.columns
+        html += '<TR><TD ALIGN="LEFT">%s</TD></TR>' % '<BR ALIGN="LEFT"/>'.join(format_col(col) for col in cols)
     else:
         [format_col(col) for col in sorted(mapper.columns, key=lambda col:not col.primary_key)]
     if show_operations:
@@ -34,12 +38,12 @@ def escape(name):
     return '"%s"' % name
 
 
-def create_uml_graph(mappers, show_operations=True, show_attributes=True, show_multiplicity_one=False, show_datatypes=True, linewidth=1.0, font="Bitstream-Vera Sans"):
+def create_uml_graph(mappers, show_operations=True, show_attributes=True, show_inherited=True, show_multiplicity_one=False, show_datatypes=True, linewidth=1.0, font="Bitstream-Vera Sans"):
     graph = pydot.Dot(prog='neato',mode="major",overlap="0", sep="0.01",dim="3", pack="True", ratio=".75")
     relations = set()
     for mapper in mappers:
         graph.add_node(pydot.Node(escape(mapper.class_.__name__),
-            shape="plaintext", label=_mk_label(mapper, show_operations, show_attributes, show_datatypes, linewidth),
+            shape="plaintext", label=_mk_label(mapper, show_operations, show_attributes, show_datatypes, show_inherited, linewidth),
             fontname=font, fontsize="8.0",
         ))
         if mapper.inherits:
