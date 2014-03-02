@@ -1,3 +1,7 @@
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
 from sqlalchemy import types
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
@@ -20,7 +24,29 @@ def plain_result_list(**kw):
         if len(kw['tables']):
             kw['tables'][0].metadata.create_all()
     graph = sasd.create_schema_graph(**kw)
-    return filter(None, (x.strip() for x in graph.create_plain().split('\n')))
+    result = {}
+    sio = StringIO(graph.create_plain())
+    graph = None
+    for line in sio:
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith('graph'):
+            parts = line.split(None, 4)
+            graph = result.setdefault(parts[1], {'nodes': {}})
+            if len(parts) > 4:
+                graph['options'] = parts[4]
+        elif line.startswith('node'):
+            parts = line.split(None, 6)
+            graph['nodes'][parts[1]] = parts[6]
+        elif line.startswith('edge'):
+            parts = line.split(None, 3)
+            graph.setdefault('edges', {})[(parts[1], parts[2])] = parts[3]
+        elif line == 'stop':
+            graph = None
+        else:
+            raise ValueError("Don't know how to handle line:\n%s" % line)
+    return result
 
 
 def test_no_args():
@@ -40,11 +66,9 @@ def test_empty_table(metadata):
         'foo', metadata,
         Column('id', types.Integer, primary_key=True))
     result = plain_result_list(metadata=metadata)
-    assert len(result) == 3
-    assert result[0].startswith('graph 1')
-    assert result[1].startswith('node foo')
-    assert '- id : INTEGER' in result[1]
-    assert result[2] == 'stop'
+    assert result.keys() == ['1']
+    assert result['1']['nodes'].keys() == ['foo']
+    assert '- id : INTEGER' in result['1']['nodes']['foo']
 
 
 def test_foreign_key(metadata):
@@ -55,13 +79,12 @@ def test_foreign_key(metadata):
         'bar', metadata,
         Column('foo_id', types.Integer, ForeignKey(foo.c.id)))
     result = plain_result_list(metadata=metadata)
-    assert result[0].startswith('graph 1')
-    assert result[1].startswith('node foo')
-    assert '- id : INTEGER' in result[1]
-    assert result[2].startswith('node bar')
-    assert '- foo_id : INTEGER' in result[2]
-    assert result[3].startswith('edge bar foo')
-    assert result[4] == 'stop'
+    assert result.keys() == ['1']
+    assert sorted(result['1']['nodes'].keys()) == ['bar', 'foo']
+    assert '- id : INTEGER' in result['1']['nodes']['foo']
+    assert '- foo_id : INTEGER' in result['1']['nodes']['bar']
+    assert 'edges' in result['1']
+    assert ('bar', 'foo') in result['1']['edges']
 
 
 def test_table_filtering(metadata):
@@ -72,7 +95,6 @@ def test_table_filtering(metadata):
         'bar', metadata,
         Column('foo_id', types.Integer, ForeignKey(foo.c.id)))
     result = plain_result_list(tables=[bar])
-    assert result[0].startswith('graph 1')
-    assert result[1].startswith('node bar')
-    assert '- foo_id : INTEGER' in result[1]
-    assert result[2] == 'stop'
+    assert result.keys() == ['1']
+    assert result['1']['nodes'].keys() == ['bar']
+    assert '- foo_id : INTEGER' in result['1']['nodes']['bar']
