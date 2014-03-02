@@ -1,0 +1,4 @@
+/.tox/
+/.coverage
+/dist/
+/htmlcov/
