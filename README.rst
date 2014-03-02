@@ -12,6 +12,9 @@ Changelog
 1.2 - Unreleased
 ----------------
 
+- Compatibility with SQLAlchemy 0.8.
+  [Surgo - Kosei Kitahara]
+
 - Leave tables out even when a foreign key points to them but they are not in
   the table list.
   [tiagosab - Tiago Saboga]
