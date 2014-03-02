@@ -12,6 +12,9 @@ Changelog
 1.2 - Unreleased
 ----------------
 
+- Compatibility with SQLAlchemy 0.9.
+  [fschulze]
+
 - Compatibility with SQLAlchemy 0.8.
   [Surgo - Kosei Kitahara]
 
@@ -34,3 +37,4 @@ Changelog
 ----------------
 
 - Initial release
+  [fschulze - Florian Schulze]
