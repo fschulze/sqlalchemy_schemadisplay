@@ -2,7 +2,7 @@ from setuptools import setup
 
 import os
 
-version = '1.2'
+version = '1.3dev'
 
 long_description = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 

@@ -9,6 +9,11 @@ See http://www.sqlalchemy.org/trac/wiki/UsageRecipes/SchemaDisplay
 Changelog
 =========
 
+1.3 - Unreleased
+----------------
+
+
+
 1.2 - 2014-03-02
 ----------------
 
