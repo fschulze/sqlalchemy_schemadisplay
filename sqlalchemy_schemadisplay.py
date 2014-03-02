@@ -133,14 +133,14 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
     }
     relation_kwargs.update(relation_options)
     
-    if not metadata and len(tables):
+    if metadata is None and tables is not None and len(tables):
         metadata = tables[0].metadata
-    elif not tables and metadata:
+    elif tables is None and metadata is not None:
         if not len(metadata.tables):
             metadata.reflect()
         tables = metadata.tables.values()
     else:
-        raise Exception("You need to specify at least tables or metadata")
+        raise ValueError("You need to specify at least tables or metadata")
     
     graph = pydot.Dot(prog="dot",mode="ipsep",overlap="ipsep",sep="0.01",concentrate=str(concentrate), rankdir=rankdir)
     for table in tables:

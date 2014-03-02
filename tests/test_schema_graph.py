@@ -19,6 +19,12 @@ def plain_result_list(**kw):
     return filter(None, (x.strip() for x in graph.create_plain().split('\n')))
 
 
+def test_no_args():
+    with pytest.raises(ValueError) as e:
+        sasd.create_schema_graph()
+    assert e.value.args[0] == 'You need to specify at least tables or metadata'
+
+
 def test_empty_db(metadata):
     graph = sasd.create_schema_graph(metadata=metadata)
     assert isinstance(graph, pydot.Graph)
