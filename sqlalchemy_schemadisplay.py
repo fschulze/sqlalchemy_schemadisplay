@@ -63,7 +63,11 @@ def create_uml_graph(mappers, show_operations=True, show_attributes=True, show_i
         def multiplicity_indicator(prop):
             if prop.uselist:
                 return ' *'
-            if any(col.nullable for col in prop.local_side):
+            if hasattr(prop, 'local_side'):
+                cols = prop.local_side
+            else:
+                cols = prop.local_columns
+            if any(col.nullable for col in cols):
                 return ' 0..1'
             if show_multiplicity_one:
                 return ' 1'
