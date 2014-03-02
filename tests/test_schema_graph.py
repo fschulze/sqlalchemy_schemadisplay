@@ -14,7 +14,11 @@ def metadata(request):
 
 
 def plain_result_list(**kw):
-    kw['metadata'].create_all()
+    if 'metadata' in kw:
+        kw['metadata'].create_all()
+    elif 'tables' in kw:
+        if len(kw['tables']):
+            kw['tables'][0].metadata.create_all()
     graph = sasd.create_schema_graph(**kw)
     return filter(None, (x.strip() for x in graph.create_plain().split('\n')))
 
@@ -58,3 +62,17 @@ def test_foreign_key(metadata):
     assert '- foo_id : INTEGER' in result[2]
     assert result[3].startswith('edge bar foo')
     assert result[4] == 'stop'
+
+
+def test_table_filtering(metadata):
+    foo = Table(
+        'foo', metadata,
+        Column('id', types.Integer, primary_key=True))
+    bar = Table(
+        'bar', metadata,
+        Column('foo_id', types.Integer, ForeignKey(foo.c.id)))
+    result = plain_result_list(tables=[bar])
+    assert result[0].startswith('graph 1')
+    assert result[1].startswith('node bar')
+    assert '- foo_id : INTEGER' in result[1]
+    assert result[2] == 'stop'
