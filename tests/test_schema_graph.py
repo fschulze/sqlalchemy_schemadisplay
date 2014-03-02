@@ -1,12 +1,9 @@
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
 from sqlalchemy import types
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import MetaData
 from sqlalchemy import Table
+from utils import parse_graph
 import pydot
 import pytest
 import sqlalchemy_schemadisplay as sasd
@@ -17,36 +14,13 @@ def metadata(request):
     return MetaData('sqlite:///:memory:')
 
 
-def plain_result_list(**kw):
+def plain_result(**kw):
     if 'metadata' in kw:
         kw['metadata'].create_all()
     elif 'tables' in kw:
         if len(kw['tables']):
             kw['tables'][0].metadata.create_all()
-    graph = sasd.create_schema_graph(**kw)
-    result = {}
-    sio = StringIO(graph.create_plain())
-    graph = None
-    for line in sio:
-        line = line.strip()
-        if not line:
-            continue
-        if line.startswith('graph'):
-            parts = line.split(None, 4)
-            graph = result.setdefault(parts[1], {'nodes': {}})
-            if len(parts) > 4:
-                graph['options'] = parts[4]
-        elif line.startswith('node'):
-            parts = line.split(None, 6)
-            graph['nodes'][parts[1]] = parts[6]
-        elif line.startswith('edge'):
-            parts = line.split(None, 3)
-            graph.setdefault('edges', {})[(parts[1], parts[2])] = parts[3]
-        elif line == 'stop':
-            graph = None
-        else:
-            raise ValueError("Don't know how to handle line:\n%s" % line)
-    return result
+    return parse_graph(sasd.create_schema_graph(**kw))
 
 
 def test_no_args():
@@ -65,7 +39,7 @@ def test_empty_table(metadata):
     Table(
         'foo', metadata,
         Column('id', types.Integer, primary_key=True))
-    result = plain_result_list(metadata=metadata)
+    result = plain_result(metadata=metadata)
     assert result.keys() == ['1']
     assert result['1']['nodes'].keys() == ['foo']
     assert '- id : INTEGER' in result['1']['nodes']['foo']
@@ -78,7 +52,7 @@ def test_foreign_key(metadata):
     Table(
         'bar', metadata,
         Column('foo_id', types.Integer, ForeignKey(foo.c.id)))
-    result = plain_result_list(metadata=metadata)
+    result = plain_result(metadata=metadata)
     assert result.keys() == ['1']
     assert sorted(result['1']['nodes'].keys()) == ['bar', 'foo']
     assert '- id : INTEGER' in result['1']['nodes']['foo']
@@ -94,7 +68,7 @@ def test_table_filtering(metadata):
     bar = Table(
         'bar', metadata,
         Column('foo_id', types.Integer, ForeignKey(foo.c.id)))
-    result = plain_result_list(tables=[bar])
+    result = plain_result(tables=[bar])
     assert result.keys() == ['1']
     assert result['1']['nodes'].keys() == ['bar']
     assert '- foo_id : INTEGER' in result['1']['nodes']['bar']
