@@ -152,6 +152,8 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
     
     for table in tables:
         for fk in table.foreign_keys:
+            if fk.column.table not in tables:
+                continue
             edge = [table.name, fk.column.table.name]
             is_inheritance = fk.parent.primary_key and fk.column.primary_key
             if is_inheritance:
