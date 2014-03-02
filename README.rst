@@ -12,6 +12,9 @@ Changelog
 1.2 - Unreleased
 ----------------
 
+- Leave tables out even when a foreign key points to them but they are not in
+  the table list.
+  [tiagosab - Tiago Saboga]
 
 
 1.1 - 2011-10-12
@@ -23,8 +26,8 @@ Changelog
 - Quote class name, because some names like 'Node' confuse dot.
   [nouri - Daniel Nouri]
 
+
 1.0 - 2011-01-07
 ----------------
 
 - Initial release
-
