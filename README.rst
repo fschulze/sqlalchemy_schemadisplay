@@ -12,6 +12,8 @@ Changelog
 1.3 - Unreleased
 ----------------
 
+- Use MIT license
+  [fschulze]
 
 
 1.2 - 2014-03-02
@@ -43,3 +45,5 @@ Changelog
 
 - Initial release
   [fschulze - Florian Schulze]
+
+- Original releases as recipe on SQLAlchemy Wiki by Ants Aasma
