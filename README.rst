@@ -9,7 +9,7 @@ See http://www.sqlalchemy.org/trac/wiki/UsageRecipes/SchemaDisplay
 Changelog
 =========
 
-1.3 - Unreleased
+1.3 - 2016-01-27
 ----------------
 
 - Fix warning about illegal attribute in uml generation by using correct
