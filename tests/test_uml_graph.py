@@ -28,7 +28,7 @@ def mappers(*args):
     return [class_mapper(x) for x in args]
 
 
-def test_simple_class(Base):
+def test_simple_class(Base, capsys):
     class Foo(Base):
         __tablename__ = 'foo'
         id = Column(types.Integer, primary_key=True)
@@ -36,6 +36,9 @@ def test_simple_class(Base):
     assert result.keys() == ['1']
     assert result['1']['nodes'].keys() == ['Foo']
     assert '+id : Integer' in result['1']['nodes']['Foo']
+    out, err = capsys.readouterr()
+    assert out == u''
+    assert err == u''
 
 
 def test_relation(Base):

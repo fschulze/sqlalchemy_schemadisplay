@@ -12,6 +12,10 @@ Changelog
 1.3 - Unreleased
 ----------------
 
+- Fix warning about illegal attribute in uml generation by using correct
+  attribute.
+  [electrocucaracha - Victor Morales]
+
 - Use MIT license
   [fschulze]
 
