@@ -12,7 +12,8 @@ Changelog
 1.4 - Unreleased
 ----------------
 
-
+- Set dir kwarg in Edge instantiation to 'both' in order to show arrow heads and arrow tails 
+  [bkrn - Aaron Di Silvestro]
 
 1.3 - 2016-01-27
 ----------------
