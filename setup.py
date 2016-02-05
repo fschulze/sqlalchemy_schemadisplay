@@ -19,7 +19,7 @@ setup(
     zip_safe=True,
     install_requires=[
         'setuptools',
-        'pydot',
+        'pydot3',
     ],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
