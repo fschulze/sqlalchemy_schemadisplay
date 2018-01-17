@@ -149,10 +149,11 @@ def _render_table_html(table, metadata, show_indexes, show_datatypes, show_colum
     return html
 
 def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_datatypes=True, font="Bitstream-Vera Sans",
-    concentrate=True, relation_options={}, rankdir='TB', show_column_keys=False):
+    concentrate=True, relation_options={}, rankdir='TB', show_column_keys=False, restrict_tables=None):
     """
     Args:
       show_column_keys (boolean, default=False): If true then add a PK/FK suffix to columns names that are primary and foreign keys
+      restrict_tables (None or list of strings): Restrict the graph to only consider tables whose name are defined restrict_tables
     """
 
     relation_kwargs = {
@@ -170,6 +171,11 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
         raise ValueError("You need to specify at least tables or metadata")
 
     graph = pydot.Dot(prog="dot",mode="ipsep",overlap="ipsep",sep="0.01",concentrate=str(concentrate), rankdir=rankdir)
+    if restrict_tables is None:
+        restrict_tables = set([t.name.lower() for t in tables])
+    else:
+        restrict_tables = set([t.lower() for t in restrict_tables])
+    tables = [t for t in tables if t.name in restrict_tables]
     for table in tables:
 
         graph.add_node(pydot.Node(str(table.name),

@@ -17,6 +17,8 @@ Changelog
 
 - Add 'show_column_keys' kwarg to 'create_schema_graph' to allow a PK/FK suffix to be added to columns that are primary keys/foreign keys respectively [cchrysostomou - Constantine Chrysostomou]
 
+- Add 'restrict_tables' kwarg to 'create_schema_graph' to restrict the desired tables we want to generate via graphviz and show relationships for [cchrysostomou - Constantine Chrysostomou]
+
 
 1.3 - 2016-01-27
 ----------------
