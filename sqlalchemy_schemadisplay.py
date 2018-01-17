@@ -104,17 +104,23 @@ def create_uml_graph(mappers, show_operations=True, show_attributes=True, show_i
 from sqlalchemy.dialects.postgresql.base import PGDialect
 from sqlalchemy import Table, text
 
-def _render_table_html(table, metadata, show_indexes, show_datatypes):
+def _render_table_html(table, metadata, show_indexes, show_datatypes):    
+    # add in (PK) OR (FK) suffixes to column names that are considered to be primary key or foreign key
+    fk_col_names = set([h for f in table.foreign_keys for h in f.constraint.column_keys])        
+    pk_key_names = set([f for f in table.primary_key.columns.keys()])
+    
     def format_col_type(col):
         try:
             return col.type.get_col_spec()
         except (AttributeError, NotImplementedError):
             return str(col.type)
     def format_col_str(col):
+         # add in (PK) OR (FK) suffixes to column names that are considered to be primary key or foreign key
+         suffix = '(FK)' if col.name in fk_col_names else '(PK)' if col.name in pk_key_names else ''
          if show_datatypes:
-             return "- %s : %s" % (col.name, format_col_type(col))
+             return "- %s : %s" % (col.name + suffix, format_col_type(col))
          else:
-             return "- %s" % col.name
+             return "- %s" % (col.name + suffix)
     html = '<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0"><TR><TD ALIGN="CENTER">%s</TD></TR><TR><TD BORDER="1" CELLPADDING="0"></TD></TR>' % table.name
 
     html += ''.join('<TR><TD ALIGN="LEFT" PORT="%s">%s</TD></TR>' % (col.name, format_col_str(col)) for col in table.columns)
@@ -131,7 +137,12 @@ def _render_table_html(table, metadata, show_indexes, show_datatypes):
     return html
 
 def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_datatypes=True, font="Bitstream-Vera Sans",
-    concentrate=True, relation_options={}, rankdir='TB'):
+    concentrate=True, relation_options={}, rankdir='TB', restrict_tables=None):
+    """
+    Args:
+      restrict_tables (None or list of strings): Restrict the graph to only consider tables whose name are defined restrict_tables
+    """
+    
     relation_kwargs = {
         'fontsize':"7.0"
     }
@@ -146,15 +157,21 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
     else:
         raise ValueError("You need to specify at least tables or metadata")
 
-    graph = pydot.Dot(prog="dot",mode="ipsep",overlap="ipsep",sep="0.01",concentrate=str(concentrate), rankdir=rankdir)
-    for table in tables:
+    graph = pydot.Dot(prog="dot",mode="ipsep",overlap="ipsep",sep="0.01",concentrate=str(concentrate), rankdir=rankdir)    
+    if restrict_tables is None:
+        restrict_tables = set([t.name.lower() for t in tables])
+    else:
+        restrict_tables = set([t.lower() for t in restrict_tables])
+    tables = [t for t in tables if t.name in restrict_tables]
+    for table in tables:        
+        
         graph.add_node(pydot.Node(str(table.name),
             shape="plaintext",
             label=_render_table_html(table, metadata, show_indexes, show_datatypes),
             fontname=font, fontsize="7.0"
         ))
 
-    for table in tables:
+    for table in tables:        
         for fk in table.foreign_keys:
             if fk.column.table not in tables:
                 continue
