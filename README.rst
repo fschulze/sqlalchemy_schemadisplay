@@ -15,6 +15,9 @@ Changelog
 - Set dir kwarg in Edge instantiation to 'both' in order to show arrow heads and arrow tails.
   [bkrn - Aaron Di Silvestro]
 
+- Add 'show_column_keys' kwarg to 'create_schema_graph' to allow a PK/FK suffix to be added to columns that are primary keys/foreign keys respectively [cchrysostomou - Constantine Chrysostomou]
+
+
 1.3 - 2016-01-27
 ----------------
 

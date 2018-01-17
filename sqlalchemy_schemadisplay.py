@@ -102,19 +102,37 @@ def create_uml_graph(mappers, show_operations=True, show_attributes=True, show_i
     return graph
 
 from sqlalchemy.dialects.postgresql.base import PGDialect
-from sqlalchemy import Table, text
+from sqlalchemy import Table, text, ForeignKeyConstraint
 
-def _render_table_html(table, metadata, show_indexes, show_datatypes):
+
+def _render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys):
+    # add in (PK) OR (FK) suffixes to column names that are considered to be primary key or foreign key
+    use_column_key_attr = hasattr(ForeignKeyConstraint, 'column_keys')  # sqlalchemy > 1.0 uses column_keys to return list of strings for foreign keys, previously was columns
+    if show_column_keys:
+        if (use_column_key_attr):
+            # sqlalchemy > 1.0
+            fk_col_names = set([h for f in table.foreign_key_constraints for h in f.columns.keys()])
+        else:
+            # sqlalchemy pre 1.0?
+            fk_col_names = set([h.name for f in table.foreign_keys for h in f.constraint.columns])
+        # fk_col_names = set([h for f in table.foreign_key_constraints for h in f.columns.keys()])
+        pk_col_names = set([f for f in table.primary_key.columns.keys()])
+    else:
+        fk_col_names = set()
+        pk_col_names = set()
+
     def format_col_type(col):
         try:
             return col.type.get_col_spec()
         except (AttributeError, NotImplementedError):
             return str(col.type)
     def format_col_str(col):
+         # add in (PK) OR (FK) suffixes to column names that are considered to be primary key or foreign key
+         suffix = '(FK)' if col.name in fk_col_names else '(PK)' if col.name in pk_col_names else ''
          if show_datatypes:
-             return "- %s : %s" % (col.name, format_col_type(col))
+             return "- %s : %s" % (col.name + suffix, format_col_type(col))
          else:
-             return "- %s" % col.name
+             return "- %s" % (col.name + suffix)
     html = '<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0"><TR><TD ALIGN="CENTER">%s</TD></TR><TR><TD BORDER="1" CELLPADDING="0"></TD></TR>' % table.name
 
     html += ''.join('<TR><TD ALIGN="LEFT" PORT="%s">%s</TD></TR>' % (col.name, format_col_str(col)) for col in table.columns)
@@ -131,7 +149,12 @@ def _render_table_html(table, metadata, show_indexes, show_datatypes):
     return html
 
 def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_datatypes=True, font="Bitstream-Vera Sans",
-    concentrate=True, relation_options={}, rankdir='TB'):
+    concentrate=True, relation_options={}, rankdir='TB', show_column_keys=False):
+    """
+    Args:
+      show_column_keys (boolean, default=False): If true then add a PK/FK suffix to columns names that are primary and foreign keys
+    """
+
     relation_kwargs = {
         'fontsize':"7.0"
     }
@@ -148,9 +171,10 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
 
     graph = pydot.Dot(prog="dot",mode="ipsep",overlap="ipsep",sep="0.01",concentrate=str(concentrate), rankdir=rankdir)
     for table in tables:
+
         graph.add_node(pydot.Node(str(table.name),
             shape="plaintext",
-            label=_render_table_html(table, metadata, show_indexes, show_datatypes),
+            label=_render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys),
             fontname=font, fontsize="7.0"
         ))
 
