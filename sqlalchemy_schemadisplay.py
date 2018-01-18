@@ -179,7 +179,7 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
         
         graph.add_node(pydot.Node(str(table.name),
             shape="plaintext",
-            label=_render_table_html(table, metadata, show_indexes, show_datatypes),
+            label=_render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys),
             fontname=font, fontsize="7.0"
         ))
 
