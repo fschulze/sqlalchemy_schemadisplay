@@ -163,6 +163,7 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
             if is_inheritance:
                 edge = edge[::-1]
             graph_edge = pydot.Edge(
+                dir='both',
                 headlabel="+ %s"%fk.column.name, taillabel='+ %s'%fk.parent.name,
                 arrowhead=is_inheritance and 'none' or 'odot' ,
                 arrowtail=(fk.parent.primary_key or fk.parent.unique) and 'empty' or 'crow' ,
