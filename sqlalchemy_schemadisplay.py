@@ -127,7 +127,7 @@ def _render_table_html(table, metadata, show_indexes, show_datatypes, show_colum
             return str(col.type)
     def format_col_str(col):
          # add in (PK) OR (FK) suffixes to column names that are considered to be primary key or foreign key
-         suffix = '(FK)' if col.name in fk_col_names else '(PK)' if col.name in pk_key_names else ''
+         suffix = '(FK)' if col.name in fk_col_names else '(PK)' if col.name in pk_col_names else ''
          if show_datatypes:
              return "- %s : %s" % (col.name + suffix, format_col_type(col))
          else:
