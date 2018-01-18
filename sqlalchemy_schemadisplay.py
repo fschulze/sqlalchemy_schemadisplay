@@ -102,24 +102,24 @@ def create_uml_graph(mappers, show_operations=True, show_attributes=True, show_i
     return graph
 
 from sqlalchemy.dialects.postgresql.base import PGDialect
-from sqlalchemy import Table, text  # , ForeignKeyConstraint
+from sqlalchemy import Table, text, ForeignKeyConstraint
 
-def _render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys):    
+def _render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys):
     # add in (PK) OR (FK) suffixes to column names that are considered to be primary key or foreign key
-    # use_column_key_attr = hasattr(ForeignKeyConstraint, 'column_keys')  # sqlalchemy > 1.0 uses column_keys to return list of strings for foreign keys, previously was columns
+    use_column_key_attr = hasattr(ForeignKeyConstraint, 'column_keys')  # sqlalchemy > 1.0 uses column_keys to return list of strings for foreign keys, previously was columns
     if show_column_keys:
-        # if (use_column_key_attr):
-        #     # sqlalchemy > 1.0
-        #     fk_col_names = set([h for f in table.foreign_keys for h in f.constraint.column_keys])
-        # else:
-        #     # sqlalchemy pre 1.0?
-        #     fk_col_names = set([h for f in table.foreign_keys for h in f.constraint.columns])
-        fk_col_names = set([h for f in table.foreign_key_constraints for h in f.columns.keys()])
+        if (use_column_key_attr):
+            # sqlalchemy > 1.0
+            fk_col_names = set([h for f in table.foreign_key_constraints for h in f.columns.keys()])
+        else:
+            # sqlalchemy pre 1.0?
+            fk_col_names = set([h.name for f in table.foreign_keys for h in f.constraint.columns])
+        # fk_col_names = set([h for f in table.foreign_key_constraints for h in f.columns.keys()])
         pk_col_names = set([f for f in table.primary_key.columns.keys()])
     else:
         fk_col_names = set()
         pk_col_names = set()
-    
+
     def format_col_type(col):
         try:
             return col.type.get_col_spec()
@@ -154,7 +154,7 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
       show_column_keys (boolean, default=False): If true then add a PK/FK suffix to columns names that are primary and foreign keys
       restrict_tables (None or list of strings): Restrict the graph to only consider tables whose name are defined restrict_tables
     """
-    
+
     relation_kwargs = {
         'fontsize':"7.0"
     }
@@ -169,21 +169,21 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
     else:
         raise ValueError("You need to specify at least tables or metadata")
 
-    graph = pydot.Dot(prog="dot",mode="ipsep",overlap="ipsep",sep="0.01",concentrate=str(concentrate), rankdir=rankdir)    
+    graph = pydot.Dot(prog="dot",mode="ipsep",overlap="ipsep",sep="0.01",concentrate=str(concentrate), rankdir=rankdir)
     if restrict_tables is None:
         restrict_tables = set([t.name.lower() for t in tables])
     else:
         restrict_tables = set([t.lower() for t in restrict_tables])
     tables = [t for t in tables if t.name in restrict_tables]
-    for table in tables:        
-        
+    for table in tables:
+
         graph.add_node(pydot.Node(str(table.name),
             shape="plaintext",
             label=_render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys),
             fontname=font, fontsize="7.0"
         ))
 
-    for table in tables:        
+    for table in tables:
         for fk in table.foreign_keys:
             if fk.column.table not in tables:
                 continue
