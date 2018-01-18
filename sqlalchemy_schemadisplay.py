@@ -104,7 +104,7 @@ def create_uml_graph(mappers, show_operations=True, show_attributes=True, show_i
 from sqlalchemy.dialects.postgresql.base import PGDialect
 from sqlalchemy import Table, text  # , ForeignKeyConstraint
 
-def _render_table_html(table, metadata, show_indexes, show_datatypes):    
+def _render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys):    
     # add in (PK) OR (FK) suffixes to column names that are considered to be primary key or foreign key
     # use_column_key_attr = hasattr(ForeignKeyConstraint, 'column_keys')  # sqlalchemy > 1.0 uses column_keys to return list of strings for foreign keys, previously was columns
     if show_column_keys:
