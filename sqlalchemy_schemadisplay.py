@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # updated SQLA schema display to work with pydot 1.0.2
 
 from sqlalchemy.orm.properties import RelationshipProperty
