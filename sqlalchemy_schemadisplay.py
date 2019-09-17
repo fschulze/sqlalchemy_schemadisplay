@@ -226,7 +226,7 @@ def show_schema_graph(*args, **kwargs):
     iostream = StringIO(create_schema_graph(*args, **kwargs).create_png())
     Image.open(iostream).show(command=kwargs.get('command','gwenview'))
 
-def main(dburli, outpng='dbschema.png'):
+def main(dburli, outpng):
     from sqlalchemy import MetaData
     from sqlalchemy_schemadisplay import create_schema_graph
 
@@ -238,12 +238,12 @@ def main(dburli, outpng='dbschema.png'):
        concentrate=False # Don't try to join the relation lines together
     )
     print('writing {}'.format(outpng))
-    graph.write_png('dbschema.png') # write out the file
+    graph.write_png(outpng) # write out the file
 
 
 if __name__ == '__main__':
   usage = '''\
-usage: {py} <dburl>
+usage: {py} <dburl> [out.png]
 
 examples:
 
@@ -258,4 +258,9 @@ examples:
     sys.exit()
 
   dburl = sys.argv[1]
-  sys.exit(main(dburl))
+  if sys.argv[2:]:
+    outpng = sys.argv[2]
+  else:
+    outpng = 'out.png'
+
+  sys.exit(main(dburl, outpng))
