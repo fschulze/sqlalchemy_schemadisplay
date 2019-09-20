@@ -226,9 +226,8 @@ def show_schema_graph(*args, **kwargs):
     iostream = StringIO(create_schema_graph(*args, **kwargs).create_png())
     Image.open(iostream).show(command=kwargs.get('command','gwenview'))
 
-def main(dburli, outpng):
+def main(dburl, outpng):
     from sqlalchemy import MetaData
-    from sqlalchemy_schemadisplay import create_schema_graph
 
     # create the pydot graph object by autoloading all tables via a bound metadata object
     graph = create_schema_graph(metadata=MetaData(dburl),
@@ -257,10 +256,11 @@ examples:
     print(usage)
     sys.exit()
 
-  dburl = sys.argv[1]
+  arg_dburl = sys.argv[1]
   if sys.argv[2:]:
-    outpng = sys.argv[2]
+    arg_outpng = sys.argv[2]
   else:
-    outpng = 'out.png'
+    arg_outpng = 'out.png'
 
-  sys.exit(main(dburl, outpng))
+  sys.exit(main(arg_dburl, arg_outpng))
+
