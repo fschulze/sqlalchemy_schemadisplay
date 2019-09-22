@@ -4,7 +4,20 @@ python:
   - 3.5
   - 3.6
   - 3.7
+  - 3.8-dev
 sudo: false
+matrix:
+  include:
+    - python: 2.7
+      env: TOXENV=sqla06-py27,sqla07-py27,sqla08-py27,sqla09-py27,sqlalchemy-py27
+    - python: 3.5
+      env: TOXENV=sqlalchemy-py35
+    - python: 3.6
+      env: TOXENV=sqlalchemy-py36
+    - python: 3.7
+      env: TOXENV=sqlalchemy-py37
+    - python: 3.8-dev
+      env: TOXENV=sqlalchemy-py3
 install:
   - pip install tox
 addons:
