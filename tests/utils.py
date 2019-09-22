@@ -8,7 +8,7 @@ except ImportError:
 
 def parse_graph(graph):
     result = {}
-    if sys.version_info[0] == 2
+    if sys.version_info[0] == 2:
         sio = StringIO(graph.create_plain())                    #python2
     else:
         sio = StringIO(graph.create_plain().decode('utf-8'))    #python3
