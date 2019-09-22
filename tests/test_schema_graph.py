@@ -32,8 +32,7 @@ def test_no_args():
 def test_empty_db(metadata):
     graph = sasd.create_schema_graph(metadata=metadata)
     assert isinstance(graph, pydot.Graph)
-    assert graph.create_plain().decode('utf-8') ==\
-        'graph 1 0 0\nstop\n'.decode('utf-8')
+    assert graph.create_plain().decode('utf-8') == u'graph 1 0 0\nstop\n'
 
 
 def test_empty_table(metadata):
