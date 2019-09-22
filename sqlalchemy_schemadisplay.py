@@ -214,18 +214,18 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
 
 def show_uml_graph(*args, **kwargs):
     try:
-        from cStringIO import StringIO as sIO   # for python 2.7
+        from cStringIO import StringIO   # for python 2.7
     except ImportError:
-        from io import StringIO as sIO       # for python 3.x
+        from io import StringIO       # for python 3.x
     from PIL import Image
-    iostream = sIO(create_uml_graph(*args, **kwargs).create_png())
+    iostream = StringIO(create_uml_graph(*args, **kwargs).create_png())
     Image.open(iostream).show(command=kwargs.get('command','gwenview'))
 
 def show_schema_graph(*args, **kwargs):
     try:
-        from cStringIO import StringIO as sIO   # for python 2.7
+        from cStringIO import StringIO   # for python 2.7
     except ImportError:
-        from io import StringIO as sIO       # for python 3.x
+        from io import StringIO       # for python 3.x
     from PIL import Image
-    iostream = sIO(create_schema_graph(*args, **kwargs).create_png())
+    iostream = StringIO(create_schema_graph(*args, **kwargs).create_png())
     Image.open(iostream).show(command=kwargs.get('command','gwenview'))
