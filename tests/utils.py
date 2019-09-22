@@ -1,15 +1,20 @@
+import sys
+
 try:
     from cStringIO import StringIO
 except ImportError:
-    from StringIO import StringIO
+    from io import StringIO
 
 
 def parse_graph(graph):
     result = {}
-    sio = StringIO(graph.create_plain())
+    if sys.version_info[0] == 2
+        sio = StringIO(graph.create_plain())                    #python2
+    else:
+        sio = StringIO(graph.create_plain().decode('utf-8'))    #python3
     graph = None
     for line in sio:
-        line = line.strip()
+        line = str(line).strip()
         if not line:
             continue
         if line.startswith('graph'):

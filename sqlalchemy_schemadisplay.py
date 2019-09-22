@@ -216,7 +216,7 @@ def show_uml_graph(*args, **kwargs):
     try:
         from cStringIO import StringIO as sIO   # for python 2.7
     except ImportError:
-        from io import BytesIO as sIO       # for python 3.x
+        from io import StringIO as sIO       # for python 3.x
     from PIL import Image
     iostream = sIO(create_uml_graph(*args, **kwargs).create_png())
     Image.open(iostream).show(command=kwargs.get('command','gwenview'))
@@ -225,7 +225,7 @@ def show_schema_graph(*args, **kwargs):
     try:
         from cStringIO import StringIO as sIO   # for python 2.7
     except ImportError:
-        from io import BytesIO as sIO       # for python 3.x
+        from io import StringIO as sIO       # for python 3.x
     from PIL import Image
     iostream = sIO(create_schema_graph(*args, **kwargs).create_png())
     Image.open(iostream).show(command=kwargs.get('command','gwenview'))
