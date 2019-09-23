@@ -1,7 +1,6 @@
 # updated SQLA schema display to work with pydot 1.0.2
 
 from sqlalchemy.orm.properties import RelationshipProperty
-from sqlalchemy.orm import sync
 import pydot
 import types
 
@@ -219,7 +218,7 @@ def show_uml_graph(*args, **kwargs):
         from io import StringIO       # for python 3.x
     from PIL import Image
     iostream = StringIO(create_uml_graph(*args, **kwargs).create_png())
-    Image.open(iostream).show(command=kwargs.get('command','gwenview'))
+    Image.open(iostream).show(command=kwargs.get('command', 'gwenview'))
 
 def show_schema_graph(*args, **kwargs):
     try:
@@ -228,4 +227,4 @@ def show_schema_graph(*args, **kwargs):
         from io import StringIO       # for python 3.x
     from PIL import Image
     iostream = StringIO(create_schema_graph(*args, **kwargs).create_png())
-    Image.open(iostream).show(command=kwargs.get('command','gwenview'))
+    Image.open(iostream).show(command=kwargs.get('command', 'gwenview'))
