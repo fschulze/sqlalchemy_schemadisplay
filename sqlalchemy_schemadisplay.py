@@ -254,7 +254,7 @@ def main(dburl, outpng):
 
 
 if __name__ == '__main__':
-  usage = '''\
+    usage = '''\
 usage: {py} <dburl> [out.png]
 
 examples:
@@ -262,18 +262,18 @@ examples:
   {py} postgres://user:pwd@host/database
   {py} sqlite:////usr/share/my.db
 
-  '''.format(py=__file__)
+'''.format(py=__file__)
 
-  import sys
-  if not sys.argv[1:]:
-    print(usage)
-    sys.exit()
+    import sys
+    if not sys.argv[1:]:
+        print(usage)
+        sys.exit()
 
-  arg_dburl = sys.argv[1]
-  if sys.argv[2:]:
-    arg_outpng = sys.argv[2]
-  else:
-    arg_outpng = 'out.png'
+    arg_dburl = sys.argv[1]
+    if sys.argv[2:]:
+        arg_outpng = sys.argv[2]
+    else:
+        arg_outpng = 'out.png'
 
-  sys.exit(main(arg_dburl, arg_outpng))
+    sys.exit(main(arg_dburl, arg_outpng))
 
