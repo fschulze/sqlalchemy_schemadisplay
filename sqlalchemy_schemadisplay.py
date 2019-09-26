@@ -230,6 +230,19 @@ def main(dburl, outpng):
     from sqlalchemy import MetaData
 
     # create the pydot graph object by autoloading all tables via a bound metadata object
+    if dburl.startswith('sqlite:///'):
+        # open SQLite databases read-only
+        # https://github.com/sqlalchemy/sqlalchemy/issues/4863
+        import sqlite3
+        def connectro():
+            filepath = dburl[10:]
+            sqliteurl = 'file:' + filepath + '?mode=ro'
+            return sqlite3.connect(sqliteurl, uri=True)
+
+        from sqlalchemy import create_engine
+        metadata = MetaData(create_engine('sqlite://', creator=connectro))
+    else:
+        metadata = MetaData(dburl)
     graph = create_schema_graph(metadata=MetaData(dburl),
        show_datatypes=False, # The image would get nasty big if we'd show the datatypes
        show_indexes=False, # ditto for indexes
