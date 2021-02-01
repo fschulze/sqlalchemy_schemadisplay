@@ -125,7 +125,10 @@ def _render_table_html(table, metadata, show_indexes, show_datatypes, show_colum
         try:
             return col.type.get_col_spec()
         except (AttributeError, NotImplementedError):
-            return str(col.type)
+            try:
+                return str(col.type)
+            except Exception:
+                return type(col.type).__name__
     def format_col_str(col):
          # add in (PK) OR (FK) suffixes to column names that are considered to be primary key or foreign key
          suffix = '(FK)' if col.name in fk_col_names else '(PK)' if col.name in pk_col_names else ''
