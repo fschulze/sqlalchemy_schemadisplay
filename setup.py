@@ -24,7 +24,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'sqlite2png=sqlalchemy_schemadisplay:cli',
+            'db2png=sqlalchemy_schemadisplay:cli',
          ],
     },
     classifiers=[
