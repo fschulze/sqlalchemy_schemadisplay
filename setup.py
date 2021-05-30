@@ -19,7 +19,7 @@ setup(
     zip_safe=True,
     install_requires=[
         'setuptools',
-        'sqlalchemy',
+        'sqlalchemy>=1.3.9',
         'pydot',
     ],
     classifiers=[
