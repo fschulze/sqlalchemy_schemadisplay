@@ -22,6 +22,11 @@ setup(
         'sqlalchemy>=1.3.9',
         'pydot',
     ],
+    entry_points={
+        'console_scripts': [
+            'sqlite2png=sqlalchemy_schemadisplay:cli',
+         ],
+    },
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
