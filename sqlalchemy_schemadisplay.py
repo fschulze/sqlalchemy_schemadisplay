@@ -105,7 +105,7 @@ from sqlalchemy.dialects.postgresql.base import PGDialect
 from sqlalchemy import Table, text, ForeignKeyConstraint
 
 
-def _render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys, show_schema_name)->str:
+def _render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys, show_schema_name, format_schema_name, format_table_name)->str:
     # add in (PK) OR (FK) suffixes to column names that are considered to be primary key or foreign key
     use_column_key_attr = hasattr(ForeignKeyConstraint, 'column_keys')  # sqlalchemy > 1.0 uses column_keys to return list of strings for foreign keys, previously was columns
     if show_column_keys:
@@ -133,8 +133,35 @@ def _render_table_html(table, metadata, show_indexes, show_datatypes, show_colum
              return "- %s : %s" % (col.name + suffix, format_col_type(col))
          else:
              return "- %s" % (col.name + suffix)
-    schema_str = ('%s.' % table.schema) if show_schema_name == True and hasattr(table, 'schema') and table.schema is not None else ''
-    html = '<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0"><TR><TD ALIGN="CENTER">%s%s</TD></TR><TR><TD BORDER="1" CELLPADDING="0"></TD></TR>' % (schema_str, table.name)
+
+    def format_name(obj_name:str, format_dict:dict)->str:
+        # Check if format_dict was passed correctly
+        if isinstance(format_dict, dict):
+            # Should color be checked against /^#([A-Fa-f0-9]{8}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/?
+            return '<FONT COLOR="{color}" POINT-SIZE="{size}">{bld}{it}{name}{e_it}{e_bld}</FONT>'.format(
+                name=obj_name,
+                color=format_dict.get('color') if 'color' in format_dict else 'initial',
+                size=float(format_dict['fontsize']) if 'fontsize' in format_dict else 'initial',
+                it='<I>' if format_dict.get('italics') else '',
+                e_it='</I>' if format_dict.get('italics') else '',
+                bld='<B>' if format_dict.get('bold') else '',
+                e_bld='</B>' if format_dict.get('bold') else ''
+            )
+        else:
+            return obj_name
+
+    schema_str = ""
+    if show_schema_name == True and hasattr(table, 'schema') and table.schema is not None:
+        # Build string for schema name, empty if show_schema_name is False
+        schema_str = format_name(table.schema, format_schema_name)
+    table_str = format_name(table.name, format_table_name)
+
+    # Assemble table header
+    html = '<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0"><TR><TD ALIGN="CENTER">%s%s%s</TD></TR><TR><TD BORDER="1" CELLPADDING="0"></TD></TR>' % (
+        schema_str,
+        '.' if show_schema_name else '',
+        table_str
+    )
 
     html += ''.join('<TR><TD ALIGN="LEFT" PORT="%s">%s</TD></TR>' % (col.name, format_col_str(col)) for col in table.columns)
     if metadata.bind and isinstance(metadata.bind.dialect, PGDialect):
@@ -151,12 +178,14 @@ def _render_table_html(table, metadata, show_indexes, show_datatypes, show_colum
 
 def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_datatypes=True, font="Bitstream-Vera Sans",
     concentrate:bool=True, relation_options={}, rankdir:str='TB', show_column_keys:bool=False, restrict_tables=None,
-    show_schema_name:bool=False)->pydot.Dot:
+    show_schema_name:bool=False, format_schema_name:dict=None, format_table_name:dict=None)->pydot.Dot:
     """
     Args:
       metadata (sqlalchemy.MetaData, default=None): SqlAlchemy `MetaData` with reference to related tables.  If none is provided, uses metadata from first entry of `tables` argument.
       show_column_keys (bool, default=False): If true then add a PK/FK suffix to columns names that are primary and foreign keys.
       show_schema_name (bool, default=False): If true, then prepend '<schema name>.' to the table name resulting in '<schema name>.<table name>'.
+      format_schema_name (dict, default=None): If provided, allowed keys include: 'color' (hex color code incl #), 'fontsize' as a float, and 'bold' and 'italics' as bools.
+      format_table_name (dict, default=None): If provided, allowed keys include: 'color' (hex color code incl #), 'fontsize' as a float, and 'bold' and 'italics' as bools.
       restrict_tables (None or list of strings): Restrict the graph to only consider tables whose name are defined `restrict_tables`.
       rankdir (string, default='TB'): Sets direction of graph layout.  Passed to `pydot.Dot` object.  Options are 'TB' (top to bottom), 'BT' (bottom to top), 'LR' (left to right), 'RL' (right to left).
       concentrate (bool, default=True): Specifies if multiedges should be merged into a single edge & partially parallel edges to share overlapping path.  Passed to `pydot.Dot` object.
@@ -176,6 +205,15 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
     else:
         raise ValueError("You need to specify at least tables or metadata")
 
+    # check if unexpected keys were used in format_schema_name param
+    if isinstance(format_schema_name, dict) and \
+            len(set(format_schema_name.keys()).difference({'color','fontsize', 'italics', 'bold'})) > 0:
+        raise KeyError('Unrecognized keys were used in dict provided for `format_schema_name` parameter')
+    # check if unexpected keys were used in format_table_name param
+    if isinstance(format_table_name, dict) and \
+            len(set(format_table_name.keys()).difference({'color','fontsize', 'italics', 'bold'})) > 0:
+        raise KeyError('Unrecognized keys were used in dict provided for `format_table_name` parameter')
+
     graph = pydot.Dot(prog="dot",mode="ipsep",overlap="ipsep",sep="0.01",concentrate=str(concentrate), rankdir=rankdir)
     if restrict_tables is None:
         restrict_tables = set([t.name.lower() for t in tables])
@@ -186,7 +224,7 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
 
         graph.add_node(pydot.Node(str(table.name),
             shape="plaintext",
-            label=_render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys, show_schema_name),
+            label=_render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys, show_schema_name, format_schema_name, format_table_name),
             fontname=font, fontsize="7.0"
         ))
 
