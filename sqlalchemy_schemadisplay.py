@@ -105,7 +105,7 @@ from sqlalchemy.dialects.postgresql.base import PGDialect
 from sqlalchemy import Table, text, ForeignKeyConstraint
 
 
-def _render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys):
+def _render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys, show_schema_name)->str:
     # add in (PK) OR (FK) suffixes to column names that are considered to be primary key or foreign key
     use_column_key_attr = hasattr(ForeignKeyConstraint, 'column_keys')  # sqlalchemy > 1.0 uses column_keys to return list of strings for foreign keys, previously was columns
     if show_column_keys:
@@ -133,7 +133,8 @@ def _render_table_html(table, metadata, show_indexes, show_datatypes, show_colum
              return "- %s : %s" % (col.name + suffix, format_col_type(col))
          else:
              return "- %s" % (col.name + suffix)
-    html = '<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0"><TR><TD ALIGN="CENTER">%s</TD></TR><TR><TD BORDER="1" CELLPADDING="0"></TD></TR>' % table.name
+    schema_str = ('%s.' % table.schema) if show_schema_name == True and hasattr(table, 'schema') and table.schema is not None else ''
+    html = '<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0"><TR><TD ALIGN="CENTER">%s%s</TD></TR><TR><TD BORDER="1" CELLPADDING="0"></TD></TR>' % (schema_str, table.name)
 
     html += ''.join('<TR><TD ALIGN="LEFT" PORT="%s">%s</TD></TR>' % (col.name, format_col_str(col)) for col in table.columns)
     if metadata.bind and isinstance(metadata.bind.dialect, PGDialect):
@@ -149,11 +150,16 @@ def _render_table_html(table, metadata, show_indexes, show_datatypes, show_colum
     return html
 
 def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_datatypes=True, font="Bitstream-Vera Sans",
-    concentrate=True, relation_options={}, rankdir='TB', show_column_keys=False, restrict_tables=None):
+    concentrate:bool=True, relation_options={}, rankdir:str='TB', show_column_keys:bool=False, restrict_tables=None,
+    show_schema_name:bool=False)->pydot.Dot:
     """
     Args:
-      show_column_keys (boolean, default=False): If true then add a PK/FK suffix to columns names that are primary and foreign keys
-      restrict_tables (None or list of strings): Restrict the graph to only consider tables whose name are defined restrict_tables
+      metadata (sqlalchemy.MetaData, default=None): SqlAlchemy `MetaData` with reference to related tables.  If none is provided, uses metadata from first entry of `tables` argument.
+      show_column_keys (bool, default=False): If true then add a PK/FK suffix to columns names that are primary and foreign keys.
+      show_schema_name (bool, default=False): If true, then prepend '<schema name>.' to the table name resulting in '<schema name>.<table name>'.
+      restrict_tables (None or list of strings): Restrict the graph to only consider tables whose name are defined `restrict_tables`.
+      rankdir (string, default='TB'): Sets direction of graph layout.  Passed to `pydot.Dot` object.  Options are 'TB' (top to bottom), 'BT' (bottom to top), 'LR' (left to right), 'RL' (right to left).
+      concentrate (bool, default=True): Specifies if multiedges should be merged into a single edge & partially parallel edges to share overlapping path.  Passed to `pydot.Dot` object.
     """
 
     relation_kwargs = {
@@ -180,7 +186,7 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
 
         graph.add_node(pydot.Node(str(table.name),
             shape="plaintext",
-            label=_render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys),
+            label=_render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys, show_schema_name),
             fontname=font, fontsize="7.0"
         ))
 
