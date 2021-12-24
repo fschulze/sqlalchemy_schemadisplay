@@ -5,7 +5,7 @@ from sqlalchemy import MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import class_mapper
 from sqlalchemy.orm import relationship
-from .utils import parse_graph
+from utils import parse_graph
 import pytest
 import sqlalchemy_schemadisplay as sasd
 

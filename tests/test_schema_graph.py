@@ -3,7 +3,7 @@ from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import MetaData
 from sqlalchemy import Table
-from .utils import parse_graph
+from utils import parse_graph
 import pydot
 import pytest
 import sqlalchemy_schemadisplay as sasd
