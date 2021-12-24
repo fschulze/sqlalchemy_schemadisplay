@@ -105,7 +105,7 @@ from sqlalchemy.dialects.postgresql.base import PGDialect
 from sqlalchemy import Table, text, ForeignKeyConstraint
 
 
-def _render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys, show_schema_name, format_schema_name, format_table_name)->str:
+def _render_table_html(table, metadata, show_indexes, show_datatypes, show_column_keys, show_schema_name, format_schema_name, format_table_name):
     # add in (PK) OR (FK) suffixes to column names that are considered to be primary key or foreign key
     use_column_key_attr = hasattr(ForeignKeyConstraint, 'column_keys')  # sqlalchemy > 1.0 uses column_keys to return list of strings for foreign keys, previously was columns
     if show_column_keys:
@@ -134,10 +134,10 @@ def _render_table_html(table, metadata, show_indexes, show_datatypes, show_colum
          else:
              return "- %s" % (col.name + suffix)
 
-    def format_name(obj_name:str, format_dict:dict)->str:
-        # Check if format_dict was passed correctly
-        if isinstance(format_dict, dict):
-            # Should color be checked against /^#([A-Fa-f0-9]{8}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/?
+    def format_name(obj_name, format_dict):
+        # Check if format_dict was provided
+        if format_dict is not None:
+            # Should color be checked? Could use  /^#([A-Fa-f0-9]{8}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/
             return '<FONT COLOR="{color}" POINT-SIZE="{size}">{bld}{it}{name}{e_it}{e_bld}</FONT>'.format(
                 name=obj_name,
                 color=format_dict.get('color') if 'color' in format_dict else 'initial',
@@ -177,22 +177,24 @@ def _render_table_html(table, metadata, show_indexes, show_datatypes, show_colum
     return html
 
 def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_datatypes=True, font="Bitstream-Vera Sans",
-    concentrate:bool=True, relation_options={}, rankdir:str='TB', show_column_keys:bool=False, restrict_tables=None,
-    show_schema_name:bool=False, format_schema_name:dict=None, format_table_name:dict=None)->pydot.Dot:
+    concentrate=True, relation_options={}, rankdir='TB', show_column_keys=False, restrict_tables=None,
+    show_schema_name=False, format_schema_name=None, format_table_name=None):
     """
     Args:
-      metadata (sqlalchemy.MetaData, default=None): SqlAlchemy `MetaData` with reference to related tables.  If none is provided, uses metadata from first entry of `tables` argument.
-      show_column_keys (bool, default=False): If true then add a PK/FK suffix to columns names that are primary and foreign keys.
-      show_schema_name (bool, default=False): If true, then prepend '<schema name>.' to the table name resulting in '<schema name>.<table name>'.
-      format_schema_name (dict, default=None): If provided, allowed keys include: 'color' (hex color code incl #), 'fontsize' as a float, and 'bold' and 'italics' as bools.
-      format_table_name (dict, default=None): If provided, allowed keys include: 'color' (hex color code incl #), 'fontsize' as a float, and 'bold' and 'italics' as bools.
-      restrict_tables (None or list of strings): Restrict the graph to only consider tables whose name are defined `restrict_tables`.
-      rankdir (string, default='TB'): Sets direction of graph layout.  Passed to `pydot.Dot` object.  Options are 'TB' (top to bottom), 'BT' (bottom to top), 'LR' (left to right), 'RL' (right to left).
-      concentrate (bool, default=True): Specifies if multiedges should be merged into a single edge & partially parallel edges to share overlapping path.  Passed to `pydot.Dot` object.
+      - metadata (sqlalchemy.MetaData, default=None): SqlAlchemy `MetaData` with reference to related tables.  If none is provided, uses metadata from first entry of `tables` argument.
+      - concentrate (bool, default=True): Specifies if multiedges should be merged into a single edge & partially parallel edges to share overlapping path.  Passed to `pydot.Dot` object.
+      - relation_options (dict, default: None): kwargs passed to pydot.Edge init.  Most attributes in pydot.EDGE_ATTRIBUTES are viable options.  A few values are set programmatically.
+      - rankdir (string, default='TB'): Sets direction of graph layout.  Passed to `pydot.Dot` object.  Options are 'TB' (top to bottom), 'BT' (bottom to top), 'LR' (left to right), 'RL' (right to left).
+      - show_column_keys (bool, default=False): If true then add a PK/FK suffix to columns names that are primary and foreign keys.
+      - restrict_tables (None or list of strings): Restrict the graph to only consider tables whose name are defined `restrict_tables`.
+      - show_schema_name (bool, default=False): If true, then prepend '<schema name>.' to the table name resulting in '<schema name>.<table name>'.
+      - format_schema_name (dict, default=None): If provided, allowed keys include: 'color' (hex color code incl #), 'fontsize' as a float, and 'bold' and 'italics' as bools.
+      - format_table_name (dict, default=None): If provided, allowed keys include: 'color' (hex color code incl #), 'fontsize' as a float, and 'bold' and 'italics' as bools.
     """
 
     relation_kwargs = {
-        'fontsize':"7.0"
+        'fontsize':"7.0",
+        'dir':'both'
     }
     relation_kwargs.update(relation_options)
 
@@ -206,11 +208,11 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
         raise ValueError("You need to specify at least tables or metadata")
 
     # check if unexpected keys were used in format_schema_name param
-    if isinstance(format_schema_name, dict) and \
+    if format_schema_name is not None and \
             len(set(format_schema_name.keys()).difference({'color','fontsize', 'italics', 'bold'})) > 0:
         raise KeyError('Unrecognized keys were used in dict provided for `format_schema_name` parameter')
     # check if unexpected keys were used in format_table_name param
-    if isinstance(format_table_name, dict) and \
+    if format_table_name is not None and \
             len(set(format_table_name.keys()).difference({'color','fontsize', 'italics', 'bold'})) > 0:
         raise KeyError('Unrecognized keys were used in dict provided for `format_table_name` parameter')
 
@@ -237,7 +239,6 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
             if is_inheritance:
                 edge = edge[::-1]
             graph_edge = pydot.Edge(
-                dir='both',
                 headlabel="+ %s"%fk.column.name, taillabel='+ %s'%fk.parent.name,
                 arrowhead=is_inheritance and 'none' or 'odot' ,
                 arrowtail=(fk.parent.primary_key or fk.parent.unique) and 'empty' or 'crow' ,

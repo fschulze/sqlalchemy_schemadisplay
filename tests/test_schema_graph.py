@@ -3,7 +3,7 @@ from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import MetaData
 from sqlalchemy import Table
-from utils import parse_graph
+from .utils import parse_graph
 import pydot
 import pytest
 import sqlalchemy_schemadisplay as sasd
@@ -99,3 +99,58 @@ def test_table_filtering(metadata):
     assert result.keys() == ['1']
     assert result['1']['nodes'].keys() == ['bar']
     assert '- foo_id : INTEGER' in result['1']['nodes']['bar']
+
+def test_table_rendering_without_schema(metadata):
+    foo = Table(
+        'foo', metadata,
+        Column('id', types.Integer, primary_key=True))
+    bar = Table(
+        'bar', metadata,
+        Column('foo_id', types.Integer, ForeignKey(foo.c.id)))
+
+    try:
+        sasd.create_schema_graph(metadata=metadata).create_png()
+    except Exception as ex:
+        assert False, f"An exception of type {ex.__class__.__name__} was produced when attempting to render a png of the graph"
+
+def test_table_rendering_with_schema(metadata):
+    foo = Table(
+        'foo', metadata,
+        Column('id', types.Integer, primary_key=True),
+        schema='sch_foo'
+    )
+    bar = Table(
+        'bar', metadata,
+        Column('foo_id', types.Integer, ForeignKey(foo.c.id)),
+        schema='sch_bar'
+    )
+
+    try:
+        sasd.create_schema_graph(
+            metadata=metadata,
+            show_schema_name=True,
+        ).create_png()
+    except Exception as ex:
+        assert False, f"An exception of type {ex.__class__.__name__} was produced when attempting to render a png of the graph"
+
+def test_table_rendering_with_schema_and_formatting(metadata):
+    foo = Table(
+        'foo', metadata,
+        Column('id', types.Integer, primary_key=True),
+        schema='sch_foo'
+    )
+    bar = Table(
+        'bar', metadata,
+        Column('foo_id', types.Integer, ForeignKey(foo.c.id)),
+        schema='sch_bar'
+    )
+
+    try:
+        sasd.create_schema_graph(
+            metadata=metadata,
+            show_schema_name=True,
+            format_schema_name={'fontsize':8.0, 'color': '#888888'},
+            format_table_name={'bold':True, 'fontsize': 10.0},
+        ).create_png()
+    except Exception as ex:
+        assert False, f"An exception of type {ex.__class__.__name__} was produced when attempting to render a png of the graph"
