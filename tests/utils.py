@@ -1,7 +1,7 @@
 try:
     from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
+except (ImportError, ModuleNotFoundError):
+    from io import StringIO
 
 
 def parse_graph(graph):
