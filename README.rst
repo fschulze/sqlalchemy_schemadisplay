@@ -9,7 +9,7 @@ See `SQLAlchemy wiki <https://github.com/sqlalchemy/sqlalchemy/wiki/SchemaDispla
 Usage
 =====
 
-You will need atleast SQLAlchemy and pydot along with graphviz for this. Graphviz-cairo is higly recommended to get tolerable image quality. If PIL and an image viewer are available then there are functions to automatically show the image. Some of the stuff, specifically loading list of tables from a database via a mapper and reflecting indexes currently only work on postgres.
+You will need atleast SQLAlchemy and pydot along with graphviz for this. Graphviz-cairo is highly recommended to get tolerable image quality. If PIL and an image viewer are available then there are functions to automatically show the image. Some of the stuff, specifically loading list of tables from a database via a mapper and reflecting indexes currently only work on postgres.
 
 This is an example of database entity diagram generation:
 
