@@ -20,7 +20,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        apt-get -y install graphviz
+        sudo apt-get -y install graphviz
         python -m pip install tox flake8
     - name: Lint with flake8
       run: |
