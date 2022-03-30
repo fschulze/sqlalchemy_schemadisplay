@@ -111,7 +111,7 @@ def test_table_rendering_without_schema(metadata):
     try:
         sasd.create_schema_graph(metadata=metadata).create_png()
     except Exception as ex:
-        assert False, f"An exception of type {ex.__class__.__name__} was produced when attempting to render a png of the graph"
+        assert False, "An exception of type {} was produced when attempting to render a png of the graph".format(ex.__class__.__name__)
 
 def test_table_rendering_with_schema(metadata):
     foo = Table(
@@ -131,7 +131,7 @@ def test_table_rendering_with_schema(metadata):
             show_schema_name=True,
         ).create_png()
     except Exception as ex:
-        assert False, f"An exception of type {ex.__class__.__name__} was produced when attempting to render a png of the graph"
+        assert False, "An exception of type {} was produced when attempting to render a png of the graph".format(ex.__class__.__name__)
 
 def test_table_rendering_with_schema_and_formatting(metadata):
     foo = Table(
@@ -153,4 +153,4 @@ def test_table_rendering_with_schema_and_formatting(metadata):
             format_table_name={'bold':True, 'fontsize': 10.0},
         ).create_png()
     except Exception as ex:
-        assert False, f"An exception of type {ex.__class__.__name__} was produced when attempting to render a png of the graph"
+        assert False, "An exception of type {} was produced when attempting to render a png of the graph".format(ex.__class__.__name__)
