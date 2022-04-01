@@ -1,6 +1,6 @@
 try:
     from cStringIO import StringIO
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     from io import StringIO
 
 
