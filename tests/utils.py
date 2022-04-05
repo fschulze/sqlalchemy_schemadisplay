@@ -6,7 +6,8 @@ except ImportError:
 
 def parse_graph(graph):
     result = {}
-    sio = StringIO(graph.create_plain())
+    graph_bytes = graph.create_plain()
+    sio = StringIO(graph_bytes.decode('utf-8'))
     graph = None
     for line in sio:
         line = line.strip()
