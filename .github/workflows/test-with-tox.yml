@@ -12,7 +12,7 @@ jobs:
       matrix:
         include:
         - tox-envs: "sqla06-py27,sqla07-py27,sqla08-py27,sqla09-py27,sqlalchemy-py27"
-        - tox-envs: "sqlalchemy-py310"
+        - tox-envs: "sqlalchemy-py3"
     steps:
     - uses: actions/checkout@v3
     - name: Install dependencies
