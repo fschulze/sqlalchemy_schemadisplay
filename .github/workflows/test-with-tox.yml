@@ -7,6 +7,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - tox-envs: "sqla06-py27,sqla07-py27,sqla08-py27,sqla09-py27,sqlalchemy-py27"
+        - tox-envs: "sqlalchemy-py310"
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -25,4 +31,4 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with tox
       run: |
-        tox
+        tox -v -e ${{ matrix.tox-envs }} -- -v --color=yes
