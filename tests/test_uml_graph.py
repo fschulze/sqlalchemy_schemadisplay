@@ -33,8 +33,8 @@ def test_simple_class(Base, capsys):
         __tablename__ = 'foo'
         id = Column(types.Integer, primary_key=True)
     result = plain_result(mappers(Foo))
-    assert result.keys() == ['1']
-    assert result['1']['nodes'].keys() == ['Foo']
+    assert list(result.keys()) == ['1']
+    assert list(result['1']['nodes'].keys()) == ['Foo']
     assert '+id : Integer' in result['1']['nodes']['Foo']
     out, err = capsys.readouterr()
     assert out == u''

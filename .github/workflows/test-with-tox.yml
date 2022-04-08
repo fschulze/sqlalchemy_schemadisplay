@@ -10,14 +10,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["2.7", "3.10"]
-
+        include:
+        - tox-envs: "sqla06-py27,sqla07-py27,sqla08-py27,sqla09-py27,sqlalchemy-py27"
+        - tox-envs: "sqlalchemy-py3"
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         sudo apt-get -y install graphviz
@@ -30,4 +27,4 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with tox
       run: |
-        tox
+        tox -v -e ${{ matrix.tox-envs }} -- -v --color=yes
