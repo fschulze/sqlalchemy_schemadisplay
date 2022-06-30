@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -31,8 +31,9 @@ jobs:
       run: |
         tox -v -e ${{ matrix.tox-envs }} -- -v --color=yes
 
-  deploy:
+  release:
     runs-on: ubuntu-latest
+    depends-on: test
     steps:
     - uses: actions/checkout@v3
 
@@ -42,7 +43,9 @@ jobs:
         pip install build
 
     - name: Build
-      run: python -m build
+      run: |
+        python -m build
+        git status --ignored
 
     - name: Publish
       if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
