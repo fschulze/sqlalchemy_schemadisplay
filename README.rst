@@ -3,8 +3,12 @@ sqlalchemy_schemadisplay
 
 Turn SQLAlchemy DB Model into a graph.
 
-See `SQLAlchemy wiki <https://github.com/sqlalchemy/sqlalchemy/wiki/SchemaDisplay>`_ for the previous version of this doc.
+.. image:: https://img.shields.io/pypi/v/sqlalchemy_schemadisplay
+   :alt: PyPI
+   :target: https://pypi.org/project/sqlalchemy_schemadisplay
 
+
+See `SQLAlchemy wiki <https://github.com/sqlalchemy/sqlalchemy/wiki/SchemaDisplay>`_ for the previous version of this doc.
 
 Usage
 =====
