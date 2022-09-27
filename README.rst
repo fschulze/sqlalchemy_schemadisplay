@@ -41,12 +41,12 @@ And an UML class diagram from a model:
     from sqlalchemy.orm import class_mapper
 
     # lets find all the mappers in our model
-    mappers = []
+    mappers = [model.__mapper__]
     for attr in dir(model):
         if attr[0] == '_': continue
         try:
             cls = getattr(model, attr)
-            mappers.append(class_mapper(cls))
+            mappers.append(cls.property.entity)
         except:
             pass
 
