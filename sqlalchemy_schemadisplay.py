@@ -1,5 +1,7 @@
 # updated SQLA schema display to work with pydot 1.0.2
 
+from packaging import version
+from sqlalchemy import __version__ as sqlaver
 from sqlalchemy.orm.properties import RelationshipProperty
 from sqlalchemy.orm import sync
 import pydot
@@ -106,7 +108,7 @@ from sqlalchemy import Table, text, ForeignKeyConstraint
 
 
 def _render_table_html(
-    table, metadata,
+    session, table,
     show_indexes, show_datatypes, show_column_keys, show_schema_name,
     format_schema_name, format_table_name
 ):
@@ -168,9 +170,9 @@ def _render_table_html(
     )
 
     html += ''.join('<TR><TD ALIGN="LEFT" PORT="%s">%s</TD></TR>' % (col.name, format_col_str(col)) for col in table.columns)
-    if metadata.bind and isinstance(metadata.bind.dialect, PGDialect):
+    if session.bind and isinstance(session.bind.dialect, PGDialect):
         # postgres engine doesn't reflect indexes
-        indexes = dict((name,defin) for name,defin in metadata.bind.execute(
+        indexes = dict((name,defin) for name,defin in session.bind.execute(
             text("SELECT indexname, indexdef FROM pg_indexes WHERE tablename = '%s'" % table.name)
         ))
         if indexes and show_indexes:
@@ -182,11 +184,12 @@ def _render_table_html(
     html += '</TABLE>>'
     return html
 
-def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_datatypes=True, font="Bitstream-Vera Sans",
+def create_schema_graph(session=None, tables=None, metadata=None, show_indexes=True, show_datatypes=True, font="Bitstream-Vera Sans",
     concentrate=True, relation_options={}, rankdir='TB', show_column_keys=False, restrict_tables=None,
     show_schema_name=False, format_schema_name=None, format_table_name=None):
     """
     Args:
+      - session (sqlalchemy.orm.session.Session): A database session.
       - metadata (sqlalchemy.MetaData, default=None): SqlAlchemy `MetaData` with reference to related tables.  If none
         is provided, uses metadata from first entry of `tables` argument.
       - concentrate (bool, default=True): Specifies if multiedges should be merged into a single edge & partially
@@ -222,6 +225,12 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
     else:
         raise ValueError("You need to specify at least tables or metadata")
 
+    if session is None:
+        if version.parse(sqlaver) >= version.parse('2.0.0'):
+            raise ValueError("You need to set up and provide a database session with sqlalchemy >= 2")
+        else:
+            session = metadata
+
     # check if unexpected keys were used in format_schema_name param
     if format_schema_name is not None and \
             len(set(format_schema_name.keys()).difference({'color','fontsize', 'italics', 'bold'})) > 0:
@@ -242,7 +251,7 @@ def create_schema_graph(tables=None, metadata=None, show_indexes=True, show_data
         graph.add_node(pydot.Node(str(table.name),
             shape="plaintext",
             label=_render_table_html(
-                table, metadata,
+                session, table,
                 show_indexes, show_datatypes, show_column_keys, show_schema_name,
                 format_schema_name, format_table_name
             ),
