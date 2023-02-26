@@ -1,10 +1,7 @@
 # Install pre-commit hooks via
 # pre-commit install
 exclude: >
-  (?x)^(
-    tests/input_files/.*|
-    tests/.*txt
-  )$
+  (?x)^(tests/)
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

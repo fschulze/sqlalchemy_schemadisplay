@@ -2,9 +2,9 @@
 import pydot
 import pytest
 from sqlalchemy import Column, ForeignKey, MetaData, Table, create_engine, types
-from utils import parse_graph
 
-import sqlalchemy_schemadisplay as sasd
+import sqlalchemy_schemadisplay
+from .utils import parse_graph
 
 
 @pytest.fixture
@@ -22,21 +22,22 @@ def engine():
 
 def plain_result(**kw):
     if "metadata" in kw:
-        kw["metadata"].create_all()
+        kw["metadata"].create_all(kw['engine'])
     elif "tables" in kw:
         if len(kw["tables"]):
-            kw["tables"][0].metadata.create_all()
-    return parse_graph(sasd.create_schema_graph(**kw))
+            kw["tables"][0].metadata.create_all(kw['engine'])
+    return parse_graph(sqlalchemy_schemadisplay.create_schema_graph(**kw))
 
 
 def test_no_args(engine):
     with pytest.raises(ValueError) as e:
-        sasd.create_schema_graph(engine=engine)
+        sqlalchemy_schemadisplay.create_schema_graph(engine=engine)
     assert e.value.args[0] == "You need to specify at least tables or metadata"
 
 
 def test_empty_db(metadata, engine):
-    graph = sasd.create_schema_graph(engine=engine, metadata=metadata)
+    graph = sqlalchemy_schemadisplay.create_schema_graph(engine=engine,
+                                                         metadata=metadata)
     assert isinstance(graph, pydot.Graph)
     assert graph.create_plain() == b"graph 1 0 0\nstop\n"
 
@@ -93,7 +94,9 @@ def test_foreign_key_with_key_suffix(metadata, engine):
         metadata,
         Column("foo_id", types.Integer, ForeignKey(foo.c.id)),
     )
-    result = plain_result(engine=engine, metadata=metadata, show_column_keys=True)
+    result = plain_result(engine=engine,
+                          metadata=metadata,
+                          show_column_keys=True)
     assert list(result.keys()) == ["1"]
     assert sorted(result["1"]["nodes"].keys()) == ["bar", "foo"]
     assert "- id(PK) : INTEGER" in result["1"]["nodes"]["foo"]
@@ -132,7 +135,8 @@ def test_table_rendering_without_schema(metadata, engine):
     )
 
     try:
-        sasd.create_schema_graph(engine=engine, metadata=metadata).create_png()
+        sqlalchemy_schemadisplay.create_schema_graph(
+            engine=engine, metadata=metadata).create_png()
     except Exception as ex:
         assert (
             False
@@ -140,9 +144,10 @@ def test_table_rendering_without_schema(metadata, engine):
 
 
 def test_table_rendering_with_schema(metadata, engine):
-    foo = Table(
-        "foo", metadata, Column("id", types.Integer, primary_key=True), schema="sch_foo"
-    )
+    foo = Table("foo",
+                metadata,
+                Column("id", types.Integer, primary_key=True),
+                schema="sch_foo")
     bar = Table(
         "bar",
         metadata,
@@ -151,7 +156,7 @@ def test_table_rendering_with_schema(metadata, engine):
     )
 
     try:
-        sasd.create_schema_graph(
+        sqlalchemy_schemadisplay.create_schema_graph(
             engine=engine,
             metadata=metadata,
             show_schema_name=True,
@@ -163,9 +168,10 @@ def test_table_rendering_with_schema(metadata, engine):
 
 
 def test_table_rendering_with_schema_and_formatting(metadata, engine):
-    foo = Table(
-        "foo", metadata, Column("id", types.Integer, primary_key=True), schema="sch_foo"
-    )
+    foo = Table("foo",
+                metadata,
+                Column("id", types.Integer, primary_key=True),
+                schema="sch_foo")
     bar = Table(
         "bar",
         metadata,
@@ -174,12 +180,18 @@ def test_table_rendering_with_schema_and_formatting(metadata, engine):
     )
 
     try:
-        sasd.create_schema_graph(
+        sqlalchemy_schemadisplay.create_schema_graph(
             engine=engine,
             metadata=metadata,
             show_schema_name=True,
-            format_schema_name={"fontsize": 8.0, "color": "#888888"},
-            format_table_name={"bold": True, "fontsize": 10.0},
+            format_schema_name={
+                "fontsize": 8.0,
+                "color": "#888888"
+            },
+            format_table_name={
+                "bold": True,
+                "fontsize": 10.0
+            },
         ).create_png()
     except Exception as ex:
         assert (
