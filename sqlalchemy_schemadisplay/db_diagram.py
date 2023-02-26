@@ -48,15 +48,12 @@ def _render_table_html(
         if use_column_key_attr:
             # sqlalchemy > 1.0
             fk_col_names = {
-                h
-                for f in table.foreign_key_constraints
-                for h in f.columns.keys()
+                h for f in table.foreign_key_constraints for h in f.columns.keys()
             }
         else:
             # sqlalchemy pre 1.0?
             fk_col_names = {
-                h.name
-                for f in table.foreign_keys for h in f.constraint.columns
+                h.name for f in table.foreign_keys for h in f.constraint.columns
             }
         # fk_col_names = set([h for f in table.foreign_key_constraints for h in f.columns.keys()])
         pk_col_names = set(list(table.primary_key.columns.keys()))
@@ -89,8 +86,13 @@ def _render_table_html(
         """
         # add in (PK) OR (FK) suffixes to column names that are considered to be primary key
         # or foreign key
-        suffix = ("(FK)" if col.name in fk_col_names else
-                  "(PK)" if col.name in pk_col_names else "")
+        suffix = (
+            "(FK)"
+            if col.name in fk_col_names
+            else "(PK)"
+            if col.name in pk_col_names
+            else ""
+        )
         if show_datatypes:
             return f"- {col.name + suffix} : {format_col_type(col)}"
         return f"- {col.name + suffix}"
@@ -110,10 +112,12 @@ def _render_table_html(
         if format_dict is not None:
             # Should color be checked?
             # Could use  /^#([A-Fa-f0-9]{8}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/
-            _color = format_dict.get(
-                "color") if "color" in format_dict else "initial"
-            _point_size = (float(format_dict["fontsize"])
-                           if "fontsize" in format_dict else "initial")
+            _color = format_dict.get("color") if "color" in format_dict else "initial"
+            _point_size = (
+                float(format_dict["fontsize"])
+                if "fontsize" in format_dict
+                else "initial"
+            )
             _bold = "<B>" if format_dict.get("bold") else ""
             _italic = "<I>" if format_dict.get("italics") else ""
             _text = f'<FONT COLOR="{_color}" '
@@ -125,8 +129,7 @@ def _render_table_html(
         return obj_name
 
     schema_str = ""
-    if show_schema_name and hasattr(table,
-                                    "schema") and table.schema is not None:
+    if show_schema_name and hasattr(table, "schema") and table.schema is not None:
         # Build string for schema name, empty if show_schema_name is False
         schema_str = format_name(table.schema, format_schema_name)
     table_str = format_name(table.name, format_table_name)
@@ -138,9 +141,9 @@ def _render_table_html(
 
     html += "".join(
         f'<TR><TD ALIGN="LEFT" PORT="{col.name}">{format_col_str(col)}</TD></TR>'
-        for col in table.columns)
-    if isinstance(engine, Engine) and isinstance(engine.engine.dialect,
-                                                 PGDialect):
+        for col in table.columns
+    )
+    if isinstance(engine, Engine) and isinstance(engine.engine.dialect, PGDialect):
         # postgres engine doesn't reflect indexes
         with engine.connect() as connection:
             indexes = {
@@ -148,13 +151,14 @@ def _render_table_html(
                 for key, value in connection.execute(
                     text(
                         f"SELECT indexname, indexdef FROM pg_indexes WHERE tablename = '{table.name}'"
-                    ))
+                    )
+                )
             }
             if indexes and show_indexes:
                 html += '<TR><TD BORDER="1" CELLPADDING="0"></TD></TR>'
                 for value in indexes.values():
                     i_label = "UNIQUE " if "UNIQUE" in value else "INDEX "
-                    i_label += value[value.index("("):]
+                    i_label += value[value.index("(") :]
                     html += f'<TR><TD ALIGN="LEFT">{i_label}</TD></TR>'
     html += "</TABLE>>"
     return html
@@ -235,14 +239,18 @@ def create_schema_graph(
     _accepted_keys = {"color", "fontsize", "italics", "bold"}
 
     # check if unexpected keys were used in format_schema_name param
-    if (format_schema_name is not None and len(
-            set(format_schema_name.keys()).difference(_accepted_keys)) > 0):
+    if (
+        format_schema_name is not None
+        and len(set(format_schema_name.keys()).difference(_accepted_keys)) > 0
+    ):
         raise KeyError(
             "Unrecognized keys were used in dict provided for `format_schema_name` parameter"
         )
     # check if unexpected keys were used in format_table_name param
-    if (format_table_name is not None and
-            len(set(format_table_name.keys()).difference(_accepted_keys)) > 0):
+    if (
+        format_table_name is not None
+        and len(set(format_table_name.keys()).difference(_accepted_keys)) > 0
+    ):
         raise KeyError(
             "Unrecognized keys were used in dict provided for `format_table_name` parameter"
         )
@@ -278,7 +286,8 @@ def create_schema_graph(
                 ),
                 fontname=font,
                 fontsize="7.0",
-            ), )
+            ),
+        )
 
     for table in tables:
         for fk in table.foreign_keys:
@@ -293,7 +302,8 @@ def create_schema_graph(
                 taillabel="+ %s" % fk.parent.name,
                 arrowhead=is_inheritance and "none" or "odot",
                 arrowtail=(fk.parent.primary_key or fk.parent.unique)
-                and "empty" or "crow",
+                and "empty"
+                or "crow",
                 fontname=font,
                 # samehead=fk.column.name, sametail=fk.parent.name,
                 *edge,
