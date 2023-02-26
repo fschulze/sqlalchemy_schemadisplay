@@ -1,26 +1,26 @@
-from setuptools import setup
-
 import os
 
-version = '1.4.dev0'
+from setuptools import setup
 
-long_description = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
+version = "1.4.dev0"
+
+long_description = open(os.path.join(os.path.dirname(__file__), "README.rst")).read()
 
 setup(
-    name='sqlalchemy_schemadisplay',
+    name="sqlalchemy_schemadisplay",
     version=version,
     description="Turn SQLAlchemy DB Model into a graph",
     author="Florian Schulze",
     author_email="florian.schulze@gmx.net",
     license="MIT License",
-    long_description=long_description[long_description.find('\n\n'):],
-    url='https://github.com/fschulze/sqlalchemy_schemadisplay',
-    py_modules=['sqlalchemy_schemadisplay'],
+    long_description=long_description[long_description.find("\n\n") :],
+    url="https://github.com/fschulze/sqlalchemy_schemadisplay",
+    py_modules=["sqlalchemy_schemadisplay"],
     zip_safe=True,
     install_requires=[
-        'setuptools',
-        'sqlalchemy',
-        'pydot',
+        "setuptools",
+        "sqlalchemy",
+        "pydot",
     ],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -29,5 +29,6 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Database :: Front-Ends",
-        "Operating System :: OS Independent"],
+        "Operating System :: OS Independent",
+    ],
 )

@@ -6,7 +6,7 @@ build-backend = "flit_core.buildapi"
 name = "sqlalchemy_schemadisplay"
 dynamic = ["version", "description"]
 authors = [{name = "Florian Schulze", email = "florian.schulze@gmx.net"}]
-readme = "README.md"
+readme = "README.rst"
 license = {file = "LICENSE"}
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -71,3 +71,28 @@ no_lines_before = ["LOCALFOLDER"]
 
 # Configure isort to work without access to site-packages
 known_first_party = ["sqlalchemy_schemadisplay"]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = pre-commit,py{3.8,3.9,3.10}
+requires = virtualenv >= 20
+isolated_build = True
+
+[testenv]
+commands = pytest {posargs}
+extras = testing
+
+[testenv:pre-commit]
+allowlist_externals = bash
+commands = bash -ec 'pre-commit run --all-files || ( git diff; git status; exit 1; )'
+extras =
+       pre-commit
+       tests
+
+[flake8]
+max-line-length = 140
+import-order-style = edited
+[pycodestyle]
+max-line-length = 140
+"""
