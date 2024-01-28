@@ -24,9 +24,12 @@ jobs:
     container: ${{ matrix.container }}
     steps:
     - uses: actions/checkout@v4
-    - name: "Install dependencies"
+    - name: "Install grapviz"
       run: |
-        sudo apt-get -y install graphviz
+        apt-get update
+        apt-get -y install graphviz
+    - name: Install tox flake8
+      run: |
         python -m pip install tox flake8
     - name: "Lint with flake8"
       run: |
