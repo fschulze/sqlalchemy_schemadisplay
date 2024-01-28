@@ -21,6 +21,7 @@ jobs:
           tox-envs: "sqla06-py27,sqla07-py27,sqla08-py27,sqla09-py27,sqlalchemy-py27"
         - container: python:3
           tox-envs: "sqlalchemy-py3"
+    container: ${{ matrix.container }}
     steps:
     - uses: actions/checkout@v4
     - name: "Install dependencies"
