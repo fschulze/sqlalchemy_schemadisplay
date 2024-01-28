@@ -12,15 +12,18 @@ env:
 
 jobs:
   test:
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-        - tox-envs: "sqla06-py27,sqla07-py27,sqla08-py27,sqla09-py27,sqlalchemy-py27"
-        - tox-envs: "sqlalchemy-py3"
+        - container: python:2
+          tox-envs: "sqla06-py27,sqla07-py27,sqla08-py27,sqla09-py27,sqlalchemy-py27"
+        - container: python:3
+          tox-envs: "sqlalchemy-py3"
+    container: ${{ matrix.container }}
     steps:
-    - uses: "actions/checkout@v3"
+    - uses: actions/checkout@v4
     - name: "Install dependencies"
       run: |
         sudo apt-get -y install graphviz
@@ -40,7 +43,7 @@ jobs:
     runs-on: "ubuntu-latest"
     needs: "test"
     steps:
-    - uses: "actions/checkout@v3"
+    - uses: actions/checkout@v4
 
     - name: "Install dependencies"
       run: |
