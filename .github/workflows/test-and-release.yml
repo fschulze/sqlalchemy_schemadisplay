@@ -16,12 +16,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        container:
-        - python:2
-        - python:3
         include:
-        - tox-envs: "sqla06-py27,sqla07-py27,sqla08-py27,sqla09-py27,sqlalchemy-py27"
-        - tox-envs: "sqlalchemy-py3"
+        - container: python:2
+          tox-envs: "sqla06-py27,sqla07-py27,sqla08-py27,sqla09-py27,sqlalchemy-py27"
+        - container: python:3
+          tox-envs: "sqlalchemy-py3"
     steps:
     - uses: actions/checkout@v4
     - name: "Install dependencies"
