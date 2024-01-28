@@ -12,10 +12,13 @@ env:
 
 jobs:
   test:
-    runs-on: "python:2"
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        container:
+        - python:2
+        - python:3
         include:
         - tox-envs: "sqla06-py27,sqla07-py27,sqla08-py27,sqla09-py27,sqlalchemy-py27"
         - tox-envs: "sqlalchemy-py3"
