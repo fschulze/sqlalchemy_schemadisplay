@@ -1,0 +1,98 @@
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "sqlalchemy_schemadisplay"
+dynamic = ["version", "description"]
+authors = [{name = "Florian Schulze", email = "florian.schulze@gmx.net"}]
+readme = "README.rst"
+license = {file = "LICENSE"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Database :: Front-Ends",
+    "Operating System :: OS Independent"
+]
+keywords = ["aiida", "workflows", "lammps"]
+requires-python = ">=3.8"
+dependencies = [
+    'setuptools',
+    'sqlalchemy>=2.0,<3',
+    'pydot',
+    'Pillow'
+]
+
+[project.urls]
+Documentation = "https://github.com/fschulze/sqlalchemy_schemadisplay/blob/master/README.rst"
+Source = "https://github.com/fschulze/sqlalchemy_schemadisplay"
+
+[project.optional-dependencies]
+testing = [
+    "attrs>=17.4.0",
+    "pgtest",
+    "pytest",
+    "pytest-cov",
+    "coverage",
+    "pytest-timeout",
+    "pytest-regressions"
+]
+
+pre-commit = [
+    "pre-commit",
+    "tox>=3.23.0",
+    "virtualenv>20"
+]
+
+[tool.flit.module]
+name = "sqlalchemy_schemadisplay"
+
+[tool.flit.sdist]
+exclude = [
+    "docs/",
+    "tests/",
+]
+
+[tool.coverage.run]
+# Configuration of [coverage.py](https://coverage.readthedocs.io)
+# reporting which lines of your plugin are covered by tests
+source=["sqlalchemy_schemadisplay"]
+
+[tool.isort]
+skip = ["venv"]
+# Force imports to be sorted by module, independent of import type
+force_sort_within_sections = true
+# Group first party and local folder imports together
+no_lines_before = ["LOCALFOLDER"]
+
+# Configure isort to work without access to site-packages
+known_first_party = ["sqlalchemy_schemadisplay"]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = pre-commit,py{3.8,3.9,3.10}
+requires = virtualenv >= 20
+isolated_build = True
+
+[testenv]
+commands = pytest {posargs}
+extras = testing
+
+[testenv:pre-commit]
+allowlist_externals = bash
+commands = bash -ec 'pre-commit run --all-files || ( git diff; git status; exit 1; )'
+extras =
+       pre-commit
+       tests
+
+[flake8]
+max-line-length = 140
+import-order-style = edited
+[pycodestyle]
+max-line-length = 140
+"""

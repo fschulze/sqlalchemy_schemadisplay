@@ -1,18 +1,16 @@
-from sqlalchemy import types
-from sqlalchemy import Column
-from sqlalchemy import ForeignKey
-from sqlalchemy import MetaData
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import class_mapper
-from sqlalchemy.orm import relationship
-from utils import parse_graph
+"""Set of tests for the ORM diagrams"""
 import pytest
-import sqlalchemy_schemadisplay as sasd
+from sqlalchemy import Column, ForeignKey, MetaData, types
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import class_mapper, relationship
+
+import sqlalchemy_schemadisplay
+from .utils import parse_graph
 
 
 @pytest.fixture
 def metadata(request):
-    return MetaData('sqlite:///:memory:')
+    return MetaData("sqlite:///:memory:")
 
 
 @pytest.fixture
@@ -21,7 +19,7 @@ def Base(request, metadata):
 
 
 def plain_result(mapper, **kw):
-    return parse_graph(sasd.create_uml_graph(mapper, **kw))
+    return parse_graph(sqlalchemy_schemadisplay.create_uml_graph(mapper, **kw))
 
 
 def mappers(*args):
@@ -30,50 +28,62 @@ def mappers(*args):
 
 def test_simple_class(Base, capsys):
     class Foo(Base):
-        __tablename__ = 'foo'
+        __tablename__ = "foo"
         id = Column(types.Integer, primary_key=True)
+
     result = plain_result(mappers(Foo))
-    assert list(result.keys()) == ['1']
-    assert list(result['1']['nodes'].keys()) == ['Foo']
-    assert '+id : Integer' in result['1']['nodes']['Foo']
+    assert list(result.keys()) == ["1"]
+    assert list(result["1"]["nodes"].keys()) == ["Foo"]
+    assert "+id : Integer" in result["1"]["nodes"]["Foo"]
     out, err = capsys.readouterr()
-    assert out == u''
-    assert err == u''
+    assert out == ""
+    assert err == ""
 
 
 def test_relation(Base):
     class Foo(Base):
-        __tablename__ = 'foo'
+        __tablename__ = "foo"
         id = Column(types.Integer, primary_key=True)
+
     class Bar(Base):
-        __tablename__ = 'bar'
+        __tablename__ = "bar"
         id = Column(types.Integer, primary_key=True)
         foo_id = Column(types.Integer, ForeignKey(Foo.id))
+
     Foo.bars = relationship(Bar)
-    graph = sasd.create_uml_graph(mappers(Foo, Bar))
-    assert sorted(graph.obj_dict['nodes'].keys()) == ['"Bar"', '"Foo"']
-    assert '+id : Integer' in graph.obj_dict['nodes']['"Foo"'][0]['attributes']['label']
-    assert '+foo_id : Integer' in graph.obj_dict['nodes']['"Bar"'][0]['attributes']['label']
-    assert 'edges' in graph.obj_dict
-    assert ('"Foo"', '"Bar"') in graph.obj_dict['edges']
-    assert graph.obj_dict['edges'][('"Foo"', '"Bar"')][0]['attributes']['headlabel'] == '+bars *'
+    graph = sqlalchemy_schemadisplay.create_uml_graph(mappers(Foo, Bar))
+    assert sorted(graph.obj_dict["nodes"].keys()) == ['"Bar"', '"Foo"']
+    assert "+id : Integer" in graph.obj_dict["nodes"]['"Foo"'][0][
+        "attributes"]["label"]
+    assert ("+foo_id : Integer"
+            in graph.obj_dict["nodes"]['"Bar"'][0]["attributes"]["label"])
+    assert "edges" in graph.obj_dict
+    assert ('"Foo"', '"Bar"') in graph.obj_dict["edges"]
+    assert (graph.obj_dict["edges"][(
+        '"Foo"', '"Bar"')][0]["attributes"]["headlabel"] == "+bars *")
 
 
 def test_backref(Base):
     class Foo(Base):
-        __tablename__ = 'foo'
+        __tablename__ = "foo"
         id = Column(types.Integer, primary_key=True)
+
     class Bar(Base):
-        __tablename__ = 'bar'
+        __tablename__ = "bar"
         id = Column(types.Integer, primary_key=True)
         foo_id = Column(types.Integer, ForeignKey(Foo.id))
-    Foo.bars = relationship(Bar, backref='foo')
-    graph = sasd.create_uml_graph(mappers(Foo, Bar))
-    assert sorted(graph.obj_dict['nodes'].keys()) == ['"Bar"', '"Foo"']
-    assert '+id : Integer' in graph.obj_dict['nodes']['"Foo"'][0]['attributes']['label']
-    assert '+foo_id : Integer' in graph.obj_dict['nodes']['"Bar"'][0]['attributes']['label']
-    assert 'edges' in graph.obj_dict
-    assert ('"Foo"', '"Bar"') in graph.obj_dict['edges']
-    assert ('"Bar"', '"Foo"') in graph.obj_dict['edges']
-    assert graph.obj_dict['edges'][('"Foo"', '"Bar"')][0]['attributes']['headlabel'] == '+bars *'
-    assert graph.obj_dict['edges'][('"Bar"', '"Foo"')][0]['attributes']['headlabel'] == '+foo 0..1'
+
+    Foo.bars = relationship(Bar, backref="foo")
+    graph = sqlalchemy_schemadisplay.create_uml_graph(mappers(Foo, Bar))
+    assert sorted(graph.obj_dict["nodes"].keys()) == ['"Bar"', '"Foo"']
+    assert "+id : Integer" in graph.obj_dict["nodes"]['"Foo"'][0][
+        "attributes"]["label"]
+    assert ("+foo_id : Integer"
+            in graph.obj_dict["nodes"]['"Bar"'][0]["attributes"]["label"])
+    assert "edges" in graph.obj_dict
+    assert ('"Foo"', '"Bar"') in graph.obj_dict["edges"]
+    assert ('"Bar"', '"Foo"') in graph.obj_dict["edges"]
+    assert (graph.obj_dict["edges"][(
+        '"Foo"', '"Bar"')][0]["attributes"]["headlabel"] == "+bars *")
+    assert (graph.obj_dict["edges"][(
+        '"Bar"', '"Foo"')][0]["attributes"]["headlabel"] == "+foo 0..1")
