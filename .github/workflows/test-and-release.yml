@@ -2,10 +2,10 @@ name: "Test & Release"
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "1.x"]
     tags: [ "*" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "1.x" ]
 
 env:
   FORCE_COLOR: 1
