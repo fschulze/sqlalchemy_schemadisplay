@@ -61,8 +61,12 @@ And an UML class diagram from a model:
 Changelog
 =========
 
-1.4 - Unreleased
+1.4 - 2024-02-15
 ----------------
+
+Last release to support Python 2.
+
+- Limit SQLAlchemy dependency to < 2.0 to fix installation for Python 2
 
 - Set dir kwarg in Edge instantiation to 'both' in order to show arrow heads and arrow tails.
   [bkrn - Aaron Di Silvestro]
