@@ -19,11 +19,13 @@ This is an example of database entity diagram generation:
 
 .. code-block:: python
 
-    from sqlalchemy import MetaData
+    from sqlalchemy import MetaData, create_engine
     from sqlalchemy_schemadisplay import create_schema_graph
 
     # create the pydot graph object by autoloading all tables via a bound metadata object
-    graph = create_schema_graph(metadata=MetaData('postgres://user:pwd@host/database'),
+    graph = create_schema_graph(
+       engine=create_engine('postgresql+psycopg2://user:pwd@host/database'),
+       metadata=MetaData('postgres://user:pwd@host/database'),
        show_datatypes=False, # The image would get nasty big if we'd show the datatypes
        show_indexes=False, # ditto for indexes
        rankdir='LR', # From left to right (instead of top to bottom)
