@@ -1,5 +1,5 @@
 """Set of functions to generate the diagram of the actual database"""
-from typing import List, Union
+from typing import Any, List, Union
 
 import pydot
 from sqlalchemy import Column, ForeignKeyConstraint, MetaData, Table, text
@@ -171,14 +171,13 @@ def create_schema_graph(
     show_indexes: bool = True,
     show_datatypes: bool = True,
     font: str = "Bitstream-Vera Sans",
-    concentrate: bool = True,
     relation_options: Union[dict, None] = None,
-    rankdir: str = "TB",
     show_column_keys: bool = False,
     restrict_tables: Union[List[str], None] = None,
     show_schema_name: bool = False,
     format_schema_name: Union[dict, None] = None,
     format_table_name: Union[dict, None] = None,
+    format_graph: Union[dict, None] = None,
 ) -> pydot.Dot:
     # pylint: disable=too-many-locals,too-many-arguments
     """Create a diagram for the database schema.
@@ -193,15 +192,9 @@ def create_schema_graph(
         show_datatypes (bool, optional): Whether to display the type of the columns in the table. \
             Defaults to True.
         font (str, optional): font to be used in the diagram. Defaults to "Bitstream-Vera Sans".
-        concentrate (bool, optional): Specifies if multi-edges should be merged into a single edge \
-            & partially parallel edges to share overlapping path. Passed to `pydot.Dot` object. \
-                Defaults to True.
         relation_options (Union[dict, None], optional): kwargs passed to pydot.Edge init.  \
             Most attributes in pydot.EDGE_ATTRIBUTES are viable options. A few values are set \
                 programmatically. Defaults to None.
-        rankdir (str, optional): Sets direction of graph layout.  Passed to `pydot.Dot` object.  \
-            Options are 'TB' (top to bottom), 'BT' (bottom to top), 'LR' (left to right), \
-                'RL' (right to left). Defaults to 'TB'.
         show_column_keys (bool, optional): If true then add a PK/FK suffix to columns names that \
             are primary and foreign keys. Defaults to False.
         restrict_tables (Union[List[str], optional):  Restrict the graph to only consider tables \
@@ -214,7 +207,15 @@ def create_schema_graph(
         format_table_name (Union[dict, None], optional): If provided, allowed keys include: \
             'color' (hex color code incl #), 'fontsize' as a float, and 'bold' and 'italics' as \
                 bools. Defaults to None.
-
+        format_graph (Union[dict, None], optional): If provided, allowed keys include all \
+            described in `pydot.GRAPH_ATTRIBUTES`. Passed to `pydot.Dot` object. Defaults values are:
+                mode (str): Technique for optimizing the layout. Defaults to 'ipsep'.
+                sep (float): Margin to leave around nodes when removing node overlap. Defaults to '0.01'.
+                overlap (str): Determines if and how node overlaps should be removed. Defaults to 'ipsep'.
+                concentrate (bool): Specifies if multi-edges should be merged into a single edge \
+                    & partially parallel edges to share overlapping path. Defaults to True.
+                rankdir (str): Sets direction of graph layout. Options are 'TB' (top to bottom), \
+                    'BT' (bottom to top), 'LR' (left to right), 'RL' (right to left). Defaults to 'TB'.
     Raises:
         ValueError: One needs to specify either the metadata or the tables
         KeyError: raised when unexpected keys are given to `format_schema_name` or \
@@ -236,32 +237,38 @@ def create_schema_graph(
         metadata.reflect(bind=engine)
         tables = metadata.tables.values()
 
-    _accepted_keys = {"color", "fontsize", "italics", "bold"}
+    def validate_keys(config, label, accepted_keys) -> None:
+        """Validate that sets of configurations contains only expected keys.
 
-    # check if unexpected keys were used in format_schema_name param
-    if (
-        format_schema_name is not None
-        and len(set(format_schema_name.keys()).difference(_accepted_keys)) > 0
-    ):
-        raise KeyError(
-            "Unrecognized keys were used in dict provided for `format_schema_name` parameter"
-        )
-    # check if unexpected keys were used in format_table_name param
-    if (
-        format_table_name is not None
-        and len(set(format_table_name.keys()).difference(_accepted_keys)) > 0
-    ):
-        raise KeyError(
-            "Unrecognized keys were used in dict provided for `format_table_name` parameter"
-        )
+        Args:
+            config (Union[dict,None]): set of configurations provided by the users
+            label (str): name to be displayed in the error message whenever a difference is found
+            accepted_keys (Set[str]): set of configurations supported by the package
+        """
+        if config is not None and len(set(config.keys()).difference(accepted_keys)) > 0:
+            raise KeyError(
+                f"Unrecognized keys were used in dict provided for `{label}` parameter"
+            )
+
+    _accepted_keys = {"color", "fontsize", "italics", "bold"}
+    validate_keys(format_schema_name, "format_schema_name", _accepted_keys)
+    validate_keys(format_table_name, "format_table_name", _accepted_keys)
+    validate_keys(format_graph, "format_graph", pydot.GRAPH_ATTRIBUTES)
+
+    _graph_configs = {
+        "mode": "ipsep",
+        "overlap": "ipsep",
+        "sep": "0.01",
+        "concentrate": "True",
+        "rankdir": "TB",
+    }
+
+    if format_graph:
+        _graph_configs.update(format_graph)
 
     graph = pydot.Dot(
         prog="dot",
-        mode="ipsep",
-        overlap="ipsep",
-        sep="0.01",
-        concentrate=str(concentrate),
-        rankdir=rankdir,
+        **_graph_configs,
     )
     if restrict_tables is None:
         restrict_tables = {t.name.lower() for t in tables}
