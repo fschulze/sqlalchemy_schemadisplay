@@ -35,6 +35,33 @@ def test_no_args(engine):
     assert e.value.args[0] == "You need to specify at least tables or metadata"
 
 
+def test_default_graph_args(metadata, engine):
+    graph = sqlalchemy_schemadisplay.create_schema_graph(engine=engine,
+                                                         metadata=metadata)
+    assert graph.get_attributes() == {
+        "prog": "dot",
+        "mode": "ipsep",
+        "overlap": "ipsep",
+        "sep": "0.01",
+        "concentrate": "True",
+        "rankdir": "TB",
+    }
+
+def test_custom_graph_args(metadata, engine):
+    graph = sqlalchemy_schemadisplay.create_schema_graph(engine=engine,
+                                                         metadata=metadata,
+                                                         format_graph={"sep": "0.5", "rankdir":"LR", "dpi": 300})
+    assert graph.get_attributes() == {
+        "prog": "dot",
+        "mode": "ipsep",
+        "overlap": "ipsep",
+        "sep": "0.5",
+        "concentrate": "True",
+        "rankdir": "LR",
+        "dpi": 300,
+    }
+
+
 def test_empty_db(metadata, engine):
     graph = sqlalchemy_schemadisplay.create_schema_graph(engine=engine,
                                                          metadata=metadata)

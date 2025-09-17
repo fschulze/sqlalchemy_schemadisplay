@@ -28,8 +28,10 @@ This is an example of database entity diagram generation:
        metadata=MetaData('postgres://user:pwd@host/database'),
        show_datatypes=False, # The image would get nasty big if we'd show the datatypes
        show_indexes=False, # ditto for indexes
-       rankdir='LR', # From left to right (instead of top to bottom)
-       concentrate=False # Don't try to join the relation lines together
+       format_graph={ # Customize your `pydot.Dot` object
+          "rankdir": 'LR', # From left to right (instead of top to bottom)
+          "concentrate": False, # Don't try to join the relation lines together
+       },
     )
     graph.write_png('dbschema.png') # write out the file
 
@@ -62,6 +64,11 @@ And an UML class diagram from a model:
 
 Changelog
 =========
+
+3.0 - 2025-09-17
+----------------
+
+- Flexible pydot.Dot configurations [ana-barbosa]
 
 2.0 - 2024-02-15
 ----------------
