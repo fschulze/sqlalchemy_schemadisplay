@@ -65,11 +65,6 @@ And an UML class diagram from a model:
 Changelog
 =========
 
-3.0 - 2025-09-17
-----------------
-
-- Flexible pydot.Dot configurations [ana-barbosa]
-
 2.0 - 2024-02-15
 ----------------
 
